@@ -2,6 +2,7 @@
 __pycache__
 *.pyc
 *.exe
+*.obj
 
 bin
 lex.yy.c
