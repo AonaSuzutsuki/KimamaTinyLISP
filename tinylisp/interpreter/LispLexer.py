@@ -5,7 +5,7 @@
     Provide conversion system from string to token list.
 """
 
-import Common
+from tinylisp.interpreter import Common
 
 
 class LispLexer:

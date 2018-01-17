@@ -53,17 +53,19 @@ def main():
         main function.
         :return: exit code
     """
-    text = "[test, ['+', (1, 2)]]"
+    text = "[defun, test, [lambda, [a, b, c], [+, a, [+, b, c]]]]" #[test, ['+', (1, 2)]]"
     list_parser = ListParser()
     list = list_parser.parse(text)
     print(list)
 
-    test = ['defun', 'test', ['lambda', ['f'], ['call', 'f']]]
+    test = ['defun', 'test2', ['lambda', ['f'], ['call', 'f']]]
+    test2 = ['test', 1, 2, 3]
 
-    import LispInterpreter
+    from tinylisp.interpreter import LispInterpreter
     interp = LispInterpreter.LispInterpreter()
     interp.eval(test)
-    val = interp.eval(list)
+    interp.eval(list)
+    val = interp.eval(test2)
     print(val)
 
     return 0

@@ -5,10 +5,7 @@
     Provide conversion system from string to token list.
 """
 
-import Common
-import LispLexer
-import LispParser
-import ListParser
+from tinylisp.interpreter import Common, LispLexer, LispParser
 
 
 class LispInterpreter:
@@ -81,6 +78,8 @@ class LispInterpreter:
             try:
                 return proc(*exps)
             except TypeError:
+                if isinstance(x[0], Common.Symbol):
+                    return proc
                 return x
 
 
