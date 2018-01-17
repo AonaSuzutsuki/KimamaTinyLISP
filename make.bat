@@ -10,10 +10,10 @@ If %arg%==clean (
 cd interpreter
 cd tinylisp_parser
 cd formatter
-make clean
+make -f Makefile.win clean
 cd ../
 cd parser
-make clean
+make -f Makefile.win clean
 cd ../
 cd ../
 cd ../
