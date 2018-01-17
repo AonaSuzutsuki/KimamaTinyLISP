@@ -21,6 +21,6 @@ setup(
     author_email='aonasuzutsuki@gmail.com',
     license='',
     long_description='',
-    platforms='Windows 10',
+    platforms='Windows 10, macOS high sierra',
     packages=['tinylisp'],
     )

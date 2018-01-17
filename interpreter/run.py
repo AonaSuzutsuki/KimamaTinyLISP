@@ -14,12 +14,12 @@ def main():
         :return: exit code
     """
 
-    parser = argparse.ArgumentParser(description='簡単な例です')
-    parser.add_argument('file', nargs='?')
-    parser.add_argument('-f', dest='formatter', nargs='?', default='formatter.exe')
-    parser.add_argument('-p', dest='parser', nargs='?', default='parser.exe')
-    parser.add_argument('-n', dest='native', nargs='?')
-    parser.add_argument('-t', dest='trace', nargs='?', default=False)
+    parser = argparse.ArgumentParser(description='Tiny LISP Interpreter on Python 3')
+    parser.add_argument('file', nargs='?', help='Tiny LIST format file.')
+    parser.add_argument('-f', dest='formatter', nargs='?', default='formatter.exe', help='Not use.')
+    parser.add_argument('-p', dest='parser', nargs='?', default='parser.exe', help='Executable parser file.')
+    parser.add_argument('-n', dest='native', nargs='?', help='Use parser on LispInterpreter.')
+    parser.add_argument('-t', dest='trace', nargs='?', default=False, help='Whether to trace [true/false]')
     args = parser.parse_args()
 
     if args.native is not None:

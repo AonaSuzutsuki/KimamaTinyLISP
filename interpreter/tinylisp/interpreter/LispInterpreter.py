@@ -9,6 +9,9 @@ from tinylisp.interpreter import Common, LispLexer, LispParser, ListParser
 
 
 class LispInterpreter:
+    """
+        Provide conversion system from string to token list.
+    """
     def __init__(self):
         self.global_env = LispInterpreter.add_globals(Env())
 
@@ -113,7 +116,7 @@ def to_string(exp):
 
 def repl(prompt='lispy> '):
     """
-        read-eval-print-loopのプロンプト
+        Prompt of native lisp interpreter.
     """
     lexerp = LispLexer.LispLexer()
     parserp = LispParser.LispParser()
@@ -131,6 +134,13 @@ def repl(prompt='lispy> '):
 
 
 def repl_with_asm(translator, trace=False, prompt='listpy> '):
+    """
+        Prompt of tiny lisp interpreter.
+        :param translator:
+        :param trace:
+        :param prompt:
+        :return: exit code
+    """
     out = translator.send("""
             (defun test
                 (lambda
@@ -168,6 +178,13 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
 
 
 def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
+    """
+        Prompt of tiny lisp interpreter from file.
+        :param filename:
+        :param output:
+        :param prompt:
+        :return: exit code
+    """
     with open(filename, "rU", encoding="utf_8_sig") as a_file:
         interp = LispInterpreter()
         list_parser = ListParser.ListParser()
