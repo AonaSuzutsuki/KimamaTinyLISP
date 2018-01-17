@@ -1,1 +1,8 @@
 .idea
+__pycache__
+*.pyc
+*.exe
+
+lex.yy.c
+y.tab.c
+*.oain
