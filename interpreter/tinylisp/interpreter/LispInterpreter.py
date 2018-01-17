@@ -5,10 +5,13 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.interpreter import Common, LispLexer, LispParser
+from tinylisp.interpreter import Common, LispLexer, LispParser, ListParser
 
 
 class LispInterpreter:
+    """
+        Provide conversion system from string to token list.
+    """
     def __init__(self):
         self.global_env = LispInterpreter.add_globals(Env())
 
@@ -106,15 +109,19 @@ class Env(dict):
 def to_string(exp):
     """
         PythonオブジェクトをLispの読める文字列に戻す。
-        """
+    """
     isa = isinstance
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
 
-def repl(lexerp, parserp, interp, prompt='lispy> '):
+def repl(prompt='lispy> '):
     """
-        read-eval-print-loopのプロンプト
+        Prompt of native lisp interpreter.
     """
+    lexerp = LispLexer.LispLexer()
+    parserp = LispParser.LispParser()
+    interp = LispInterpreter()
+
     while True:
         val = interp.eval(parserp.parse(lexerp.make_token(input(prompt))))
         if val == 'exit':
@@ -126,25 +133,69 @@ def repl(lexerp, parserp, interp, prompt='lispy> '):
     return 0
 
 
-def main():
+def repl_with_asm(translator, trace=False, prompt='listpy> '):
     """
-        main function.
+        Prompt of tiny lisp interpreter.
+        :param translator:
+        :param trace:
+        :param prompt:
         :return: exit code
     """
-
-    """
-    lispy> (defun factorial (lambda (n) (if (<= n 1) 1 (* n (factorial (- n 1))))))
-    lispy> (factorial 5)
-    120
-    lispy> 
-    """
-
-    lexer = LispLexer.LispLexer()
-    parser = LispParser.LispParser()
+    out = translator.send("""
+            (defun test
+                (lambda
+                    (r) (+ 1 r)
+                )
+            )
+            (test 1)
+            """)
+    list_parser = ListParser.ListParser()
     interp = LispInterpreter()
-    code = repl(lexer, parser, interp)
-    return code
+
+    for line in out.split('\r\n'):
+        if line != '':
+            list = list_parser.parse(line)
+            interp.eval(list)
+
+    is_exit = False
+    while not is_exit:
+        text = input(prompt)
+        out = translator.send(text)
+        for line in out.split('\r\n'):
+            if line != '':
+                list = list_parser.parse(line)
+                if trace:
+                    print('trace: ', list)
+                val = interp.eval(list)
+                if val == 'exit':
+                    is_exit = True
+                    break
+                elif val is not None:
+                    print(to_string(val))
+                else:
+                    continue
+    return 0
 
 
-if __name__ == '__main__':
-    exit(main())
+def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
+    """
+        Prompt of tiny lisp interpreter from file.
+        :param filename:
+        :param output:
+        :param prompt:
+        :return: exit code
+    """
+    with open(filename, "rU", encoding="utf_8_sig") as a_file:
+        interp = LispInterpreter()
+        list_parser = ListParser.ListParser()
+        for line in a_file:
+            if line != '':
+                list = list_parser.parse(line)
+                if output:
+                    print(prompt, end='')
+                    print(list)
+                val = interp.eval(list)
+                if val is not None:
+                    print(to_string(val))
+
+    return 0

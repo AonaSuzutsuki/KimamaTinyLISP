@@ -1,22 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-Symbol = str
+"""
+    Convert string representation of TinyLIST to Python internal list.
+"""
+
+from tinylisp.interpreter import Common
 
 
 class ListParser:
+    """
+        Convert string representation of TinyLIST to Python internal list.
+    """
     def parse(self, text):
-        tokens = self._preparse(text)
+        """
+            Parse string representation of TinyLIST to Python internal list.
+            :param text: string representation of TinyLIST
+            :return: Python internal list
+        """
+        tokens = ListParser._preparse(text)
         return self._parse(tokens)
 
-    def _flatten(self, tokens):
+    @staticmethod
+    def _flatten(tokens):
         list = []
         for token in tokens:
             if token != '(' and token != ')':
                 list.append(token)
         return list
 
-    def _preparse(self, text):
+    @staticmethod
+    def _preparse(text):
         text = text.replace('[', ' [ ')
         text = text.replace(']', ' ] ')
         text = text.replace('(', ' ( ')
@@ -24,28 +38,29 @@ class ListParser:
         text = text.replace(',', '')
         text = text.replace("'", '')
         tokens = text.split()
-        tokens = self._flatten(tokens)
+        tokens = ListParser._flatten(tokens)
         return tokens
 
-    def _parse(self, tokens):
+    @staticmethod
+    def _parse(tokens):
         token = tokens.pop(0)
-        if '[' == token:
-            L = []
+        if token == '[':
+            list = []
             while tokens[0] != ']':
-                L.append(self._parse(tokens))
-            tokens.pop(0)  # pop off ')'
-            return L
-        else:
-            return self._atom(token)
+                list.append(ListParser._parse(tokens))
+            tokens.pop(0)  # pop off ']'
+            return list
+        return ListParser._atom(token)
 
-    def _atom(self, token):
+    @staticmethod
+    def _atom(token):
         try:
             return int(token)
         except ValueError:
             try:
                 return float(token)
             except ValueError:
-                return Symbol(token)
+                return Common.Symbol(token)
 
 
 def main():
