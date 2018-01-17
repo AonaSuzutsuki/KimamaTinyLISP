@@ -5,7 +5,7 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.interpreter import Common, LispLexer, LispParser
+from tinylisp.interpreter import Common, LispLexer, LispParser, ListParser
 
 
 class LispInterpreter:
@@ -106,15 +106,19 @@ class Env(dict):
 def to_string(exp):
     """
         PythonオブジェクトをLispの読める文字列に戻す。
-        """
+    """
     isa = isinstance
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
 
-def repl(lexerp, parserp, interp, prompt='lispy> '):
+def repl(prompt='lispy> '):
     """
         read-eval-print-loopのプロンプト
     """
+    lexerp = LispLexer.LispLexer()
+    parserp = LispParser.LispParser()
+    interp = LispInterpreter()
+
     while True:
         val = interp.eval(parserp.parse(lexerp.make_token(input(prompt))))
         if val == 'exit':
@@ -126,25 +130,18 @@ def repl(lexerp, parserp, interp, prompt='lispy> '):
     return 0
 
 
-def main():
-    """
-        main function.
-        :return: exit code
-    """
+def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
+    with open(filename, "rU", encoding="utf_8_sig") as a_file:
+        interp = LispInterpreter()
+        list_parser = ListParser.ListParser()
+        for line in a_file:
+            if line != '':
+                list = list_parser.parse(line)
+                if output:
+                    print(prompt, end='')
+                    print(list)
+                val = interp.eval(list)
+                if val is not None:
+                    print(to_string(val))
 
-    """
-    lispy> (defun factorial (lambda (n) (if (<= n 1) 1 (* n (factorial (- n 1))))))
-    lispy> (factorial 5)
-    120
-    lispy> 
-    """
-
-    lexer = LispLexer.LispLexer()
-    parser = LispParser.LispParser()
-    interp = LispInterpreter()
-    code = repl(lexer, parser, interp)
-    return code
-
-
-if __name__ == '__main__':
-    exit(main())
+    return 0
