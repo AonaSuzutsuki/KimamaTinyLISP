@@ -114,7 +114,7 @@ def to_string(exp):
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
 
-def repl(prompt='lispy> '):
+def repl(prompt='lispy> ', trace=False):
     """
         Prompt of native lisp interpreter.
     """
@@ -123,7 +123,10 @@ def repl(prompt='lispy> '):
     interp = LispInterpreter()
 
     while True:
-        val = interp.eval(parserp.parse(lexerp.make_token(input(prompt))))
+        list = parserp.parse(lexerp.make_token(input(prompt)))
+        if trace:
+            print(list)
+        val = interp.eval(list)
         if val == 'exit':
             break
         elif val is not None:
@@ -177,11 +180,11 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
     return 0
 
 
-def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
+def repl_with_list_from_file(filename, trace=False, prompt='listpy> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
-        :param output:
+        :param trace:
         :param prompt:
         :return: exit code
     """
@@ -191,7 +194,7 @@ def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
         for line in a_file:
             if line != '':
                 list = list_parser.parse(line)
-                if output:
+                if trace:
                     print(prompt, end='')
                     print(list)
                 val = interp.eval(list)

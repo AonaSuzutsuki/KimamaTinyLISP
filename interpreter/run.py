@@ -26,7 +26,7 @@ def main():
         code = LispInterpreter.repl()
         return code
     elif args.file is not None:
-        code = LispInterpreter.repl_with_list_from_file(args.file)
+        code = LispInterpreter.repl_with_list_from_file(args.file, args.trace)
         return code
 
     import Translator
