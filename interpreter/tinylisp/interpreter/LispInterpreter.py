@@ -130,6 +130,43 @@ def repl(prompt='lispy> '):
     return 0
 
 
+def repl_with_asm(translator, trace=False, prompt='listpy> '):
+    out = translator.send("""
+            (defun test
+                (lambda
+                    (r) (+ 1 r)
+                )
+            )
+            (test 1)
+            """)
+    list_parser = ListParser.ListParser()
+    interp = LispInterpreter()
+
+    for line in out.split('\r\n'):
+        if line != '':
+            list = list_parser.parse(line)
+            interp.eval(list)
+
+    is_exit = False
+    while not is_exit:
+        text = input(prompt)
+        out = translator.send(text)
+        for line in out.split('\r\n'):
+            if line != '':
+                list = list_parser.parse(line)
+                if trace:
+                    print('trace: ', list)
+                val = interp.eval(list)
+                if val == 'exit':
+                    is_exit = True
+                    break
+                elif val is not None:
+                    print(to_string(val))
+                else:
+                    continue
+    return 0
+
+
 def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
     with open(filename, "rU", encoding="utf_8_sig") as a_file:
         interp = LispInterpreter()

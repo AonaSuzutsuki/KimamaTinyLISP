@@ -33,7 +33,7 @@ class ListParser:
             L = []
             while tokens[0] != ']':
                 L.append(self._parse(tokens))
-            tokens.pop(0)  # pop off ')'
+            tokens.pop(0)  # pop off ']'
             return L
         else:
             return self._atom(token)
