@@ -15,10 +15,15 @@ def main():
 
     run = 'run.py'
     setup = 'setup.py'
+    translator = 'Translator.py'
+    echo = 'echo.py'
 
     copyfile(run)
     copyfile(setup)
-    shutil.copytree("tinylisp", "../bin/tinylisp")
+    copyfile(translator)
+    copyfile(echo)
+    if not os.path.exists('../bin/tinylisp'):
+        shutil.copytree("tinylisp", "../bin/tinylisp")
 
 
 if __name__ == '__main__':
