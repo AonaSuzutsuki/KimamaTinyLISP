@@ -3,6 +3,7 @@ __pycache__
 *.pyc
 *.exe
 
+bin
 lex.yy.c
 y.tab.c
 *.o
