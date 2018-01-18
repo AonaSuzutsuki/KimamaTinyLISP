@@ -136,6 +136,27 @@ def repl(trace=False, prompt='lispy> '):
     return 0
 
 
+def repl_list(trace=False, prompt='lispy> '):
+    """
+        Prompt of native lisp interpreter.
+    """
+    parserp = ListParser.ListParser()
+    interp = LispInterpreter()
+
+    while True:
+        list = parserp.parse(input(prompt))
+        if trace:
+            print(list)
+        val = interp.eval(list)
+        if val == 'exit':
+            break
+        elif val is not None:
+            print(to_string(val))
+        else:
+            continue
+    return 0
+
+
 def repl_with_asm(translator, trace=False, prompt='listpy> '):
     """
         Prompt of tiny lisp interpreter.
