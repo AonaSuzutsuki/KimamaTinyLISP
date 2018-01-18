@@ -20,8 +20,7 @@ def replace_newline(text):
 
 def mtoken(text):
     text = replace_newline(text).replace('\n', '')
-    text = text.replace('(', ' ( ').replace(')', ' ) ')
-    text = text.replace('{', '(').replace('}', ')').split()
+    text = text.replace('(', ' ( ').replace(')', ' ) ').split()
     return text
 
 
@@ -94,7 +93,7 @@ def parser3(tokens):
         aList = []
 
 
-def parse4(aList, rList = []):
+def parse4(aList, rList):
     for elem in aList:
         if isinstance(elem, list):
             #print('car', car(elem))
@@ -104,6 +103,7 @@ def parse4(aList, rList = []):
                 rList.append(parse4(cdr(elem), []))
             elif celem == 'ATOM': # アトム判定
                 (id, val) = cdr(elem)[0]
+                val = resolve4(id, val)
                 rList.append(val)
                 #print(val)
             else:
@@ -121,50 +121,80 @@ def parse4(aList, rList = []):
     # print(elem)
 
 
+def resolve4(id, val):
+    if id == 'IDENTIFIER':
+        return str(val)
+    elif id == 'INTEGER':
+        return int(val)
+    elif id == 'FLOAT':
+        return float(val)
+
+
 text = """
 (LIST
-        {
-            {
+        (
+            (
                 (ATOM
                     (IDENTIFIER defun))
                 (ATOM
-                    (IDENTIFIER test))}
+                    (IDENTIFIER test)))
             (LIST
-                {
-                    {
+                (
+                    (
                         (ATOM
                             (IDENTIFIER lambda))
                         (LIST
-                            {
-                                {
+                            (
+                                (
                                     (ATOM
                                         (IDENTIFIER a))
                                     (ATOM
-                                        (IDENTIFIER b))}
+                                        (IDENTIFIER b)))
                                 (ATOM
-                                    (IDENTIFIER c))})}
+                                    (IDENTIFIER c)))))
                     (LIST
-                        {
-                            {
+                        (
+                            (
                                 (ATOM
                                     (IDENTIFIER +))
                                 (ATOM
-                                    (IDENTIFIER a))}
+                                    (IDENTIFIER a)))
                             (LIST
-                                {
-                                    {
+                                (
+                                    (
                                         (ATOM
                                             (IDENTIFIER +))
                                         (ATOM
-                                            (IDENTIFIER b))}
+                                            (IDENTIFIER b)))
                                     (ATOM
-                                        (IDENTIFIER c))})})})})
+                                        (IDENTIFIER c))))))))))
+"""
+text2 = """
+(LIST
+        (
+            (
+                (ATOM
+                    (IDENTIFIER +))
+                (ATOM
+                    (INTEGER 1)))
+            (LIST
+                (
+                    (
+                        (ATOM
+                            (IDENTIFIER +))
+                        (ATOM
+                            (INTEGER 1)))
+                    (ATOM
+                        (INTEGER 2))))))
 """
 # ['LIST', [[['ATOM', ['IDENTIFIER', '+']], ['ATOM', ['INTEGER', '1']]], ['ATOM', ['INTEGER', '2']]]]
 
 alist = parse(mtoken(text))
 print(alist)
-print(parse4(alist))
+print(parse4(alist, []))
+alist = parse(mtoken(text2))
+print(alist)
+print(parse4(alist, []))
 
 alist = parse2(alist)
 print(alist)
