@@ -114,7 +114,7 @@ def to_string(exp):
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
 
-def repl(prompt='lispy> ', trace=False):
+def repl(trace=False, prompt='lispy> '):
     """
         Prompt of native lisp interpreter.
     """
