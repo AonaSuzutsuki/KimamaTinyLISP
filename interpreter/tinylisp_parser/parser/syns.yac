@@ -1,33 +1,33 @@
 %{
 #include "defs.h"
-#define YYSTYPE char *
+#define YYSTYPE Cell *
 char s[1024];
 %}
 %token	IDENTIFIER FLOAT INTEGER LPAREN RPAREN WQUOTED UNKNOWN;
 %%
 Program
-	: Statements
+	: Statements					{  }
 Statements
-	: Statement
-	| Statements Statement
+	: Statement						{  }
+	| Statements Statement			{  }
 Statement
-	: Sexpr							{ printf("%s\n", $$); }
+	: Sexpr							{ tree($1); }
 Sexpr
-	: Atom							{ $$ = $1; }
-	| List							{ $$ = $1; }
+	: Atom							{ $$ = node("ATOM", $1); }
+	| List							{ $$ = node("LIST", $1); }
 	;
 List
-	: LPAREN Members RPAREN			{ strcpy(s, "["); strcat(s, $2); strcat(s, "]"); $$ = strdup(s); }
-	| LPAREN RPAREN					{ strcpy(s, "["); strcat(s, "]"); $$ = strdup(s); }
+	: LPAREN Members RPAREN			{ $$ = $2 }
+	| LPAREN RPAREN					{  }
 	;
 Members
-	: Sexpr							{ strcpy(s, $1); $$ = strdup(s);}
-	| Members Sexpr					{ strcpy(s, $1); strcat(s, ", "); strcat(s, $2); $$ = strdup(s); }
+	: Sexpr							{ $$ = $1; }
+	| Members Sexpr					{ $$ = cons($1, $2); }
 	;
 Atom
-	: IDENTIFIER					{ $$ = strdup(yytext); }
-	| INTEGER						{ $$ = strdup(yytext); }
-	| FLOAT							{ $$ = strdup(yytext); }
+	: IDENTIFIER					{ $$ = leaf("IDENTIFIER", yytext); }
+	| INTEGER						{ $$ = leaf("INTEGER", yytext); }
+	| FLOAT							{ $$ = leaf("FLOAT", yytext); }
 	;
 %%
 #include "lex.yy.c"

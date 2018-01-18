@@ -4,7 +4,7 @@ int linecounter = 1;
 %option nounput
 %%
 
-([a-zA-Z]|"+"|"-"|"/"|"*"|"?")([a-zA-Z0-9]|"+"|"-"|"/"|"*"|"?")*					{ return(IDENTIFIER); }
+([a-zA-Z]|"+"|"-"|"/"|"*"|"?"|">"|"<"|"=")([a-zA-Z0-9])*					{ return(IDENTIFIER); }
 [0-9]+\.[0-9]+								{ return(FLOAT); }
 [0-9]+										{ return(INTEGER); }
 
