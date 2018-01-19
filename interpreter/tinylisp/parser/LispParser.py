@@ -5,7 +5,8 @@
     Provide conversion system from token to Python list.
 """
 
-from tinylisp.interpreter import Common, LispLexer
+from tinylisp.interpreter import Common
+from tinylisp.parser import LispLexer
 
 
 class LispParser:

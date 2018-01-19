@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+    Parse TinyLIST from yacc tree.
 """
 
 
@@ -25,10 +25,12 @@ class ListParser():
         return
 
     def parse(self, text):
-        tokens = ListParser._preparse(text)
-        tokens = ListParser._convert_list(tokens)
         pList = []
-        pList = ListParser._parse(tokens, pList)
+        tokens = ListParser._preparse(text)
+
+        while len(tokens) > 0:
+            token = ListParser._convert_list(tokens)
+            pList.append(ListParser._parse(token, []))
         return pList
 
     @staticmethod
