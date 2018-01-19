@@ -79,8 +79,14 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
 
-                <TextBox Grid.Row="0" Text="{Binding LispSourceText.Value,Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox Grid.Row="2" Text="{Binding LispSourceText.Value,Mode=OneWay}" />
+                <TextBox Grid.Row="0" Text="{Binding LispSourceText.Value,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" VerticalScrollBarVisibility="Auto">
+                    <TextBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Run" Command="{Binding TinyLispRunClicked}" />
+                        </ContextMenu>
+                    </TextBox.ContextMenu>
+                </TextBox>
+                <TextBox Grid.Row="2" Text="{Binding LispOutText.Value,Mode=OneWay}" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
 
             </Grid>
         </Grid>
