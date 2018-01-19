@@ -17,7 +17,7 @@ Sexpr
 	| List							{ $$ = node("LIST", $1); }
 	;
 List
-	: LPAREN Members RPAREN			{ $$ = $2 }
+	: LPAREN Members RPAREN			{ $$ = $2; }
 	| LPAREN RPAREN					{  }
 	;
 Members
