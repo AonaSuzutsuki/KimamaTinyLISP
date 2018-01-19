@@ -45,7 +45,9 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
-        if isinstance(x, Common.Symbol):  # 変数参照
+        if x is None or (isinstance(x, list) and len(x) <= 0):
+            return None
+        elif isinstance(x, Common.Symbol):  # 変数参照
             #t = env.find(x)
             return env.find(x)[x]
         elif not isinstance(x, list):  # 定数リテラル
@@ -74,6 +76,10 @@ class LispInterpreter:
         elif x[0] == 'call':
             (_, exp) = x
             return self.eval(exp, env)
+        elif x[0] == 'trace':
+            for key, value in env.items():
+                print('{0} : {1}'.format(key, value))
+            return None
         elif x[0] == 'exit':
             return 'exit'
         else:  # (proc exp*)
@@ -107,6 +113,27 @@ class Env(dict):
         return self._outer.find(var)
 
 
+def pinput(prompt=''):
+    mbc = 0
+    text = ''
+    rprompt = prompt
+    while True:
+        _text = input(rprompt)
+        if _text == '!':
+            rprompt = prompt
+            mbc = 0
+            text = ''
+            continue
+
+        mbc += _text.count('(')
+        mbc -= _text.count(')')
+        text += _text + ' '
+        rprompt = '>>> '
+        if mbc <= 0:
+            break
+    return text
+
+
 def to_string(exp):
     """
         PythonオブジェクトをLispの読める文字列に戻す。
@@ -124,7 +151,7 @@ def repl(trace=False, prompt='lispy> '):
     interp = LispInterpreter()
 
     while True:
-        list = parserp.parse(lexerp.make_token(input(prompt)))
+        list = parserp.parse(lexerp.make_token(pinput(prompt)))
         if trace:
             print(list)
         val = interp.eval(list)
@@ -164,7 +191,7 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
 
     is_exit = False
     while not is_exit:
-        text = input(prompt)
+        text = pinput(prompt)
         suc, out = translator.send(text)
         if suc:
             a_list = list_parser.parse(out)

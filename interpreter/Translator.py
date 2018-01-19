@@ -43,8 +43,9 @@ class Translator:
 
         suc = True
         stdout_data = text.decode('utf-8')
-        if errtext != b'\nparser successfully ended\n\n':
-            stdout_data = errtext.decode('utf-8')
+        stderr_data = errtext.decode('utf-8')
+        if stderr_data != '\r\nparser successfully ended\r\n\r\n':
+            stdout_data = stderr_data
             suc = False
         #stdout_data = subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL)
         #stdout_data = stdout_data.decode("utf-8")

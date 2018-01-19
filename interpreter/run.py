@@ -25,7 +25,7 @@ def main():
     translator = Translator.Translator(args.parser)
 
     if args.native is not None:
-        code = LispInterpreter.repl(args.trace)
+        code = LispInterpreter.repl(args.trace == 'true')
         return code
     elif args.file is not None:
         code = LispInterpreter.repl_with_list_from_file(args.file, translator, args.trace == 'true')
