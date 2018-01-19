@@ -1,4 +1,3 @@
-
 class Cell:
     def __init__(self, value):
         self.kind = 0  # CONS, NODE, LEAF
@@ -53,7 +52,6 @@ def flatten(nested_list):
     return flat_list
 
 
-
 def parse2(tokens):
     if tokens[0] == 'LIST':
         aList = []
@@ -96,29 +94,31 @@ def parser3(tokens):
 def parse4(aList, rList):
     for elem in aList:
         if isinstance(elem, list):
-            #print('car', car(elem))
+            # print('car', car(elem))
             celem = car(elem)
-            if celem == 'LIST': # ネストされたリスト判定
-                #print(elem)
+            if celem == 'LIST':  # ネストされたリスト判定
+                # print(elem)
                 rList.append(parse4(cdr(elem), []))
-            elif celem == 'ATOM': # アトム判定
+            elif celem == 'ATOM':  # アトム判定
                 (id, val) = cdr(elem)[0]
                 val = resolve4(id, val)
                 rList.append(val)
-                #print(val)
+            # print(val)
             else:
                 parse4(elem, rList)
 
-            #if len(elem) == 2:
-                #(id, val) = elem
-                #if not isinstance(val, list):
-                 #   print(id, val)
-        elif elem == 'LIST': # 一番初めのリスト判定
+        # if len(elem) == 2:
+        # (id, val) = elem
+        # if not isinstance(val, list):
+        #   print(id, val)
+        elif elem == 'LIST':  # 一番初めのリスト判定
             parse4(elem, rList)
-    #print(rList)
+    # print(rList)
     return rList
-    # else:
-    # print(elem)
+
+
+# else:
+# print(elem)
 
 
 def resolve4(id, val):
@@ -190,11 +190,11 @@ text2 = """
 # ['LIST', [[['ATOM', ['IDENTIFIER', '+']], ['ATOM', ['INTEGER', '1']]], ['ATOM', ['INTEGER', '2']]]]
 
 alist = parse(mtoken(text))
-print(alist)
+# print(alist)
 print(parse4(alist, []))
 alist = parse(mtoken(text2))
-print(alist)
+# print(alist)
 print(parse4(alist, []))
 
-alist = parse2(alist)
-print(alist)
+# alist = parse2(alist)
+# print(alist)
