@@ -22,6 +22,13 @@ class ListParser:
         return self._parse(tokens)
 
     @staticmethod
+    def reparse(list):
+        text = str(list)
+        text = text.replace('[', '(').replace(']', ')').replace(',', '').replace('\'', '')
+        return text
+
+
+    @staticmethod
     def _flatten(tokens):
         list = []
         for token in tokens:

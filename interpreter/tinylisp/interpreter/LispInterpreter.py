@@ -144,9 +144,13 @@ def repl_list(trace=False, prompt='lispy> '):
     interp = LispInterpreter()
 
     while True:
-        list = parserp.parse(input(prompt))
+        try:
+            list = parserp.parse(input(prompt))
+        except EOFError:
+            return 0
+
         if trace:
-            print(list)
+            print('> ', parserp.reparse(list))
         val = interp.eval(list)
         if val == 'exit':
             break

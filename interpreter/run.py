@@ -27,7 +27,7 @@ def main():
         code = LispInterpreter.repl(args.trace)
         return code
     elif args.tinylist:
-        code = LispInterpreter.repl_list(args.trace)
+        code = LispInterpreter.repl_list(args.trace, '')
         return code
     elif args.file is not None:
         code = LispInterpreter.repl_with_list_from_file(args.file, args.trace)
