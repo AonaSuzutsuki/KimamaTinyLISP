@@ -5,7 +5,6 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.interpreter import Common
 from tinylisp.parser import LispLexer, LispParser, ListParser
 
 
@@ -33,7 +32,7 @@ class LispInterpreter:
                 'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
-                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, Common.Symbol),
+                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, str),
                 'print': print
             })
         return env
@@ -47,7 +46,7 @@ class LispInterpreter:
 
         if x is None or (isinstance(x, list) and len(x) <= 0):
             return None
-        elif isinstance(x, Common.Symbol):  # 変数参照
+        elif isinstance(x, str):  # 変数参照
             #t = env.find(x)
             return env.find(x)[x]
         elif not isinstance(x, list):  # 定数リテラル
@@ -88,7 +87,7 @@ class LispInterpreter:
             try:
                 return proc(*exps)
             except TypeError:
-                if isinstance(x[0], Common.Symbol):
+                if isinstance(x[0], str):
                     return proc
                 return x
 

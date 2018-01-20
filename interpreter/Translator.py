@@ -5,7 +5,8 @@
     Processing system for communicating the LISP syntax to the parser.
 """
 
-import subprocess, sys
+import subprocess
+import Common
 
 
 class Translator:
@@ -42,9 +43,9 @@ class Translator:
                 break
 
         suc = True
-        stdout_data = text.decode('utf-8')
-        stderr_data = errtext.decode('utf-8')
-        if stderr_data != '\r\nparser successfully ended\r\n\r\n':
+        stdout_data = Common.replace_newline(text.decode('utf-8'))
+        stderr_data = Common.replace_newline(errtext.decode('utf-8'))
+        if stderr_data != '\nparser successfully ended\n\n':
             stdout_data = stderr_data
             suc = False
         #stdout_data = subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL)
