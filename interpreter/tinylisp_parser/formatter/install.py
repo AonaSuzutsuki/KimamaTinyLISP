@@ -13,6 +13,7 @@ def main():
         filename = args[1]
         if os.path.exists(filename):
             shutil.copyfile(filename, '../../../bin/interpreter/' + filename)
+            os.chmod('../../../bin/interpreter/' + filename,0700)
 
 
 if __name__ == '__main__':

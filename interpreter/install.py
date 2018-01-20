@@ -18,12 +18,14 @@ def main():
     translator = 'Translator.py'
     echo = 'echo.py'
     runbat = 'run.bat'
+    runsh = 'run.sh'
 
     copyfile(run)
     copyfile(setup)
     copyfile(translator)
     copyfile(echo)
     copyfile(runbat, '../bin/')
+    copyfile(runsh, '../bin/')
     if not os.path.exists('../bin/interpreter/tinylisp'):
         shutil.copytree("tinylisp", "../bin/interpreter/tinylisp")
 
