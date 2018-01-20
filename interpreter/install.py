@@ -17,6 +17,7 @@ def main():
     setup = 'setup.py'
     translator = 'Translator.py'
     echo = 'echo.py'
+    common = 'Common.py'
     runbat = 'run.bat'
     runsh = 'run.sh'
 
@@ -24,6 +25,7 @@ def main():
     copyfile(setup)
     copyfile(translator)
     copyfile(echo)
+    copyfile(common)
     copyfile(runbat, '../bin/')
     copyfile(runsh, '../bin/')
     if not os.path.exists('../bin/interpreter/tinylisp'):
