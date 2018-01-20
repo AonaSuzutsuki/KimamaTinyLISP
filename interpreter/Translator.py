@@ -6,6 +6,7 @@
 """
 
 import subprocess
+import os
 import Common
 
 
@@ -15,7 +16,9 @@ class Translator:
     """
     def __init__(self, parser):
         self._parser = parser
-        self._command = 'python echo.py "{0}" | {1}'
+        self._command = 'python echo.py "{0}" | {1}{2}{3}'
+        self._sep = os.sep
+        self._dirpath = os.path.dirname(os.path.abspath(__file__))
 
     def send(self, text):
         """
@@ -24,7 +27,7 @@ class Translator:
             :return: Tiny LIST
         """
         text = text.replace('\r', '').replace('\n', '')
-        command = self._command.format(text, self._parser)
+        command = self._command.format(text, self._dirpath, self._sep, self._parser)
 
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
