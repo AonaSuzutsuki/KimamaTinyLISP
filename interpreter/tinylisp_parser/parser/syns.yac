@@ -26,8 +26,8 @@ Members
 	;
 Atom
 	: IDENTIFIER					{ $$ = leaf("IDENTIFIER", yytext); }
-	| INTEGER						{ $$ = leaf("INTEGER", yytext); }
 	| FLOAT							{ $$ = leaf("FLOAT", yytext); }
+	| INTEGER						{ $$ = leaf("INTEGER", yytext); }
 	;
 %%
 #include "lex.yy.c"
