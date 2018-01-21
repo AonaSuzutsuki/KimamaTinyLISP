@@ -5,8 +5,6 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.interpreter import Common
-
 
 class LispLexer:
     """
@@ -41,7 +39,7 @@ def main():
         :return: exit code
     """
     lexer = LispLexer()
-    tokens = lexer.make_token(Common.test_src)
+    tokens = lexer.make_token('(defun plus (lambda (a b) (+ a b)))')
     assert ['(', 'defun', 'plus', '(', 'lambda', '(', 'a', 'b', ')', '(', '+', 'a', 'b', ')', ')', ')'] == tokens, "no"
     print(tokens)
     return 0
