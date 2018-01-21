@@ -21,16 +21,12 @@ def main():
 
     parser = argparse.ArgumentParser(description='installer on Python 3')
     parser.add_argument('file', nargs='?', help='Executable parser file.')
-    parser.add_argument('-w', dest='windows', nargs='?', default='false', help='Executable parser file.')
     args = parser.parse_args()
 
-    chmod = os.chmod
-    if args.windows == 'true':
-        chmod = w_chmod
     filename = args.file
     if os.path.exists(filename):
         shutil.copyfile(filename, '../../../bin/interpreter/' + filename)
-        chmod('../../../bin/interpreter/' + filename, 700)
+        os.chmod('../../../bin/interpreter/' + filename, 700)
 
 
 if __name__ == '__main__':
