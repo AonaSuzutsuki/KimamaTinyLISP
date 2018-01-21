@@ -24,10 +24,10 @@ goto END
 cd interpreter
 cd tinylisp_parser
 cd formatter
-make install
+make -f Makefile.win install
 cd ../
 cd parser
-make install
+make -f Makefile.win install
 cd ../
 cd ../
 python install.py

@@ -5,7 +5,7 @@
     Provide conversion system from token to Python list.
 """
 
-from tinylisp.interpreter import Common, LispLexer
+from tinylisp.parser import LispLexer
 
 
 class LispParser:
@@ -42,7 +42,7 @@ class LispParser:
             try:
                 return float(token)
             except ValueError:
-                return Common.Symbol(token)
+                return str(token)
 
 
 def main():
@@ -52,7 +52,7 @@ def main():
     """
     lexer = LispLexer.LispLexer()
     parser = LispParser()
-    tokens = lexer.make_token(Common.test_src)
+    tokens = lexer.make_token('(defun plus (lambda (a b) (+ a b)))')
     lisp_list = parser.parse(tokens)
     assert ['defun', 'plus', ['lambda', ['a', 'b'], ['+', 'a', 'b']]] == lisp_list, "no"
     print(lisp_list)

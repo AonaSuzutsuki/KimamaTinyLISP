@@ -7,7 +7,7 @@
 """
 
 
-import sys
+import argparse
 
 
 def main():
@@ -16,12 +16,15 @@ def main():
         :return: exit code
     """
 
-    args = sys.argv
-    if len(args) > 1:
-        arg = args[1]
+    parser = argparse.ArgumentParser(description='echo on Python 3')
+    parser.add_argument('message', nargs='?', help='Tiny LIST format file.')
+    args = parser.parse_args()
+
+    if args.message:
+        arg = args.message
         if isinstance(arg, str):
             arg = arg.replace('"', '')
-            print(arg)
+            print(arg, end='')
 
 
 if __name__ == '__main__':
