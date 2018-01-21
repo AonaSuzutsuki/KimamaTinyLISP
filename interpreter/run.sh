@@ -1,3 +1,1 @@
-cd interpreter
-python3 run.py -p ./parser
-cd ../
+python3 interpreter/run.py -p parser
