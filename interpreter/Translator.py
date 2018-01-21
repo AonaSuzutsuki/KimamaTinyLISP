@@ -26,31 +26,32 @@ class Translator:
             :param text: LISP syntax text
             :return: Tiny LIST
         """
-        text = text.replace('\r', '').replace('\n', '')
+        text = Common.replace_newline(text).replace('\n', '@n')
         command = self._command.format(self._sep, self._dirpath, text, self._parser)
 
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        errtext = b''
-        text = b''
-        while True:
-            line = proc.stdout.readline()
-            text += line
-
-            errline = proc.stderr.readline()
-            if errline != b'':
-                errtext += errline
-
-            # バッファが空 + プロセス終了.
-            if (not line and not errline)and proc.poll() is not None:
-                break
+        rtext = self.read(proc.stdout.readline)
+        errtext = self.read(proc.stderr.readline)
+        proc.stdout.close()
+        proc.stderr.close()
 
         suc = True
-        stdout_data = Common.replace_newline(text.decode('utf-8'))
+        stdout_data = Common.replace_newline(rtext.decode('utf-8'))
         stderr_data = Common.replace_newline(errtext.decode('utf-8'))
         if stderr_data != '\nparser successfully ended\n\n':
             stdout_data = stderr_data
             suc = False
-        #stdout_data = subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL)
-        #stdout_data = stdout_data.decode("utf-8")
         return suc, stdout_data
+
+    @staticmethod
+    def read(itr):
+        """
+            Read from readline
+            :param itr: readline function
+            :return: read to end text
+        """
+        text = b''
+        for line in iter(itr, b''):
+            text += line
+        return text
