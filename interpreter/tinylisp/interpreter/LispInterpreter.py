@@ -27,8 +27,8 @@ class LispInterpreter:
         env.update(vars(cmath))  # sin, sqrt, ...
         env.update(
             {
-                '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
-                '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq,
+                '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
+                '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
                 'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
