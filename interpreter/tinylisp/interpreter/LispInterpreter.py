@@ -218,7 +218,7 @@ def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> 
         :param prompt:
         :return: exit code
     """
-    with open(filename, "rU", encoding="utf_8_sig") as a_file:
+    with open(filename, "rU", encoding="utf_8") as a_file:
         interp = LispInterpreter()
         list_parser = ListParser.ListParser()
         text = ''
