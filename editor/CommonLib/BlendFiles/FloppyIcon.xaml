@@ -1,0 +1,13 @@
+﻿<UserControl x:Class="CommonLib.BlendFiles.FloppyIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CommonLib.BlendFiles"
+             mc:Ignorable="d" 
+             d:DesignHeight="15" d:DesignWidth="15">
+    <Grid>
+        <Path Data="M3.6659999,0.5 L10.249,0.5 10.249,7.25 3.6659999,7.25 z M0.5,0.5 L3.6659999,0.5 3.6659999,7.25 10.249,7.25 10.249,0.5 10.896653,0.5 14.5,3.8647638 14.5,14.5 0.5,14.5 z" Height="15" RenderTransformOrigin="0.463833311213388,0.258333334806893" Stretch="Fill" Stroke="White" StrokeThickness="1" VerticalAlignment="Top"/>
+        <Rectangle HorizontalAlignment="Left" Height="7.75" Margin="3.166,0,0,0" Stroke="White" VerticalAlignment="Top" Width="4.354" Fill="White"/>
+    </Grid>
+</UserControl>

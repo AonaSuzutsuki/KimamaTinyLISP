@@ -5,7 +5,7 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.interpreter import Common, LispLexer, LispParser, ListParser
+from tinylisp.parser import LispLexer, LispParser, ListParser
 
 
 class LispInterpreter:
@@ -27,12 +27,12 @@ class LispInterpreter:
         env.update(vars(cmath))  # sin, sqrt, ...
         env.update(
             {
-                '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
-                '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq,
+                '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
+                '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
                 'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
-                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, Common.Symbol),
+                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, str),
                 'print': print
             })
         return env
@@ -44,7 +44,9 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
-        if isinstance(x, Common.Symbol):  # 変数参照
+        if x is None or (isinstance(x, list) and len(x) <= 0):
+            return None
+        elif isinstance(x, str):  # 変数参照
             #t = env.find(x)
             return env.find(x)[x]
         elif not isinstance(x, list):  # 定数リテラル
@@ -73,6 +75,10 @@ class LispInterpreter:
         elif x[0] == 'call':
             (_, exp) = x
             return self.eval(exp, env)
+        elif x[0] == 'trace':
+            for key, value in env.items():
+                print('{0} : {1}'.format(key, value))
+            return None
         elif x[0] == 'exit':
             return 'exit'
         else:  # (proc exp*)
@@ -81,7 +87,7 @@ class LispInterpreter:
             try:
                 return proc(*exps)
             except TypeError:
-                if isinstance(x[0], Common.Symbol):
+                if isinstance(x[0], str):
                     return proc
                 return x
 
@@ -106,6 +112,27 @@ class Env(dict):
         return self._outer.find(var)
 
 
+def pinput(prompt=''):
+    mbc = 0
+    text = ''
+    rprompt = prompt
+    while True:
+        _text = input(rprompt)
+        if _text == '!':
+            rprompt = prompt
+            mbc = 0
+            text = ''
+            continue
+
+        mbc += _text.count('(')
+        mbc -= _text.count(')')
+        text += _text + ' '
+        rprompt = '>>> '
+        if mbc <= 0:
+            break
+    return text
+
+
 def to_string(exp):
     """
         PythonオブジェクトをLispの読める文字列に戻す。
@@ -114,7 +141,7 @@ def to_string(exp):
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
 
-def repl(prompt='lispy> '):
+def repl(trace=False, prompt='lispy> '):
     """
         Prompt of native lisp interpreter.
     """
@@ -123,7 +150,10 @@ def repl(prompt='lispy> '):
     interp = LispInterpreter()
 
     while True:
-        val = interp.eval(parserp.parse(lexerp.make_token(input(prompt))))
+        list = parserp.parse(lexerp.make_token(pinput(prompt)))
+        if trace:
+            print(list)
+        val = interp.eval(list)
         if val == 'exit':
             break
         elif val is not None:
@@ -141,32 +171,33 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
         :param prompt:
         :return: exit code
     """
-    out = translator.send("""
-            (defun test
-                (lambda
-                    (r) (+ 1 r)
-                )
-            )
-            (test 1)
-            """)
+    # out = translator.send("""
+    #         (defun test
+    #             (lambda
+    #                 (r) (+ 1 r)
+    #             )
+    #         )
+    #         (test 1)
+    #         """)
     list_parser = ListParser.ListParser()
     interp = LispInterpreter()
-
-    for line in out.split('\r\n'):
-        if line != '':
-            list = list_parser.parse(line)
-            interp.eval(list)
+    #
+    # a_list = list_parser.parse(out)
+    # for elem in a_list:
+    #     val = interp.eval(elem)
+    #     if val is not None:
+    #         print(val)
 
     is_exit = False
     while not is_exit:
-        text = input(prompt)
-        out = translator.send(text)
-        for line in out.split('\r\n'):
-            if line != '':
-                list = list_parser.parse(line)
+        text = pinput(prompt)
+        suc, out = translator.send(text)
+        if suc:
+            a_list = list_parser.parse(out)
+            for elem in a_list:
                 if trace:
-                    print('trace: ', list)
-                val = interp.eval(list)
+                    print('trace: ', elem)
+                val = interp.eval(elem)
                 if val == 'exit':
                     is_exit = True
                     break
@@ -174,28 +205,39 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
                     print(to_string(val))
                 else:
                     continue
+        else:
+            print(out)
     return 0
 
 
-def repl_with_list_from_file(filename, output=True, prompt='listpy> '):
+def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
-        :param output:
+        :param trace:
         :param prompt:
         :return: exit code
     """
-    with open(filename, "rU", encoding="utf_8_sig") as a_file:
+    with open(filename, "rU", encoding="utf_8") as a_file:
         interp = LispInterpreter()
         list_parser = ListParser.ListParser()
+        text = ''
         for line in a_file:
             if line != '':
-                list = list_parser.parse(line)
-                if output:
-                    print(prompt, end='')
-                    print(list)
-                val = interp.eval(list)
-                if val is not None:
-                    print(to_string(val))
+                text += line
+
+        suc, out = translator.send(text)
+        if not suc:
+            print(out)
+            return 1
+
+        a_list = list_parser.parse(out)
+        for elem in a_list:
+            if trace:
+                print(prompt, end='')
+                print(elem)
+            val = interp.eval(elem)
+            if val is not None:
+                print(to_string(val))
 
     return 0
