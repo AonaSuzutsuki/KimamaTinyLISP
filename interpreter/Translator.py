@@ -16,7 +16,7 @@ class Translator:
     """
     def __init__(self, parser):
         self._parser = parser
-        self._command = 'python "{1}{0}echo.py" "{2}" | {1}{0}{3}'
+        self._command = 'python3 "{1}{0}echo.py" "{2}" | {1}{0}{3}'
         self._sep = os.sep
         self._dirpath = os.path.dirname(os.path.abspath(__file__))
 
