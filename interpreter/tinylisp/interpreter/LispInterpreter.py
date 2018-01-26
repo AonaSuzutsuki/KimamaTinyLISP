@@ -33,9 +33,16 @@ class LispInterpreter:
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
                 'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, str),
+                'atom': lambda x: LispInterpreter._is_atom(x), 'integerp': lambda x: isinstance(x, int),
                 'print': print
             })
         return env
+
+    @staticmethod
+    def _is_atom(val):
+        if isinstance(val, str) or isinstance(val, int) or isinstance(val, float):
+            return True
+        return False
 
     def eval(self, x, env=None):
         """
@@ -44,57 +51,80 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
-        if x is None or (isinstance(x, list) and len(x) <= 0):
-            return None
-        elif isinstance(x, str):  # 変数参照
-            #t = env.find(x)
-            return env.find(x)[x]
-        elif not isinstance(x, list):  # 定数リテラル
-            return x
-        elif x[0] == 'quote':  # (quote exp)
-            (_, exp) = x
-            return exp
-        elif x[0] == 'if':  # (if test conseq alt)
-            (_, test, conseq, alt) = x
-            return self.eval((conseq if self.eval(test, env) else alt), env)
-        elif x[0] == 'set!':  # (set! var exp)
-            (_, var, exp) = x
-            env.find(var)[var] = self.eval(exp, env)
-            return None
-        elif x[0] == 'defun':  # (define var exp)
-            (_, var, exp) = x
-            env[var] = self.eval(exp, env)
-            return None
-        elif x[0] == 'lambda':  # (lambda (var*) exp)
-            (_, vars, exp) = x
-            return lambda *args: self.eval(exp, Env(vars, args, env))
-        elif x[0] == 'begin':  # (begin exp*)
-            for exp in x[1:]:
-                val = self.eval(exp, env)
-                return val
-        elif x[0] == 'call':
-            (_, exp) = x
-            return self.eval(exp, env)
-        elif x[0] == 'trace':
-            for key, value in env.items():
-                print('{0} : {1}'.format(key, value))
-            return None
-        elif x[0] == 'exit':
-            return 'exit'
-        else:  # (proc exp*)
-            exps = [self.eval(exp, env) for exp in x]
-            proc = exps.pop(0)
-            try:
-                return proc(*exps)
-            except TypeError:
-                if isinstance(x[0], str):
-                    return proc
+        while True:
+            if x is None or (isinstance(x, list) and len(x) <= 0):
+                return None
+            if isinstance(x, str):  # 変数参照
+                #t = env.find(x)
+                return env.find(x)[x]
+            elif not isinstance(x, list):  # 定数リテラル
                 return x
+            elif x[0] == 'quote':  # (quote exp)
+                (_, exp) = x
+                return exp
+            elif x[0] == 'if':  # (if test conseq alt)
+                (_, test, conseq, alt) = x
+                return self.eval((conseq if self.eval(test, env) else alt), env)
+            elif x[0] == 'cond':
+                exps = x[1:]
+                for exp in exps:
+                    if exp[0] == 't':
+                        return self.eval(exp[1], env)
+                    elif self.eval(exp[0], env):
+                        return self.eval(exp[1], env)
+            elif x[0] == 'set!':  # (set! var exp)
+                (_, var, exp) = x
+                env.find(var)[var] = self.eval(exp, env)
+                return None
+            elif x[0] == 'defun':  # (define var exp)
+                (_, var, exp) = x
+                env[var] = self.eval(exp, env)
+                return None
+            elif x[0] == 'lambda':  # (lambda (var*) exp)
+                (_, vars, exp) = x
+                return Procedure(vars, exp, env)#lambda *args: self.eval(exp, Env(vars, args, env))
+            elif x[0] == 'begin':  # (begin exp*)
+                for exp in x[1:]:
+                    val = self.eval(exp, env)
+                    return val
+            elif x[0] == 'call':
+                (_, exp) = x
+                return self.eval(exp, env)
+            elif x[0] == 'trace':
+                for key, value in env.items():
+                    print('{0} : {1}'.format(key, value))
+                return None
+            elif x[0] == 'exit':
+                return 'exit'
+            else:  # (proc exp*)
+                exps = [self.eval(exp, env) for exp in x]
+                proc = exps.pop(0)
+                try:
+                    if isinstance(proc, Procedure):
+                        x = proc.exp
+                        env = Env(proc.parms, exps, proc.env)
+                    else:
+                        return proc(*exps)
+                except TypeError:
+                    if isinstance(x[0], str):
+                        return proc
+                    return x
+
+
+class Procedure(object):
+    """
+        A user-defined Scheme procedure.
+    """
+    def __init__(self, parms, exp, env):
+        self.parms, self.exp, self.env = parms, exp, env
+
+    def __call__(self, *args):
+        return eval(self.exp, Env(self.parms, args, self.env))
 
 
 class Env(dict):
     """
-        環境: ペア{'var':val}のdictで、外部環境(outer)を持つ。
+        An environment: a dict of {'var':val} pairs, with an outer Env.
     """
 
     def __init__(self, parms=(), args=(), outer=None):
@@ -104,7 +134,7 @@ class Env(dict):
 
     def find(self, var):
         """
-            var が現れる一番内側のEnvを見つける。
+            Find the innermost Env where var appears.
         """
         # return self if var in self else self._outer.find(var)
         if var in self:
