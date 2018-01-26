@@ -5,7 +5,7 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.parser import LispLexer, LispParser, ListParser
+from tinylisp.parser import ListParser
 
 
 class LispInterpreter:
@@ -140,27 +140,6 @@ def to_string(exp):
     isa = isinstance
     return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
-
-def repl(trace=False, prompt='lispy> '):
-    """
-        Prompt of native lisp interpreter.
-    """
-    lexerp = LispLexer.LispLexer()
-    parserp = LispParser.LispParser()
-    interp = LispInterpreter()
-
-    while True:
-        list = parserp.parse(lexerp.make_token(pinput(prompt)))
-        if trace:
-            print(list)
-        val = interp.eval(list)
-        if val == 'exit':
-            break
-        elif val is not None:
-            print(to_string(val))
-        else:
-            continue
-    return 0
 
 
 def repl_with_asm(translator, trace=False, prompt='listpy> '):
