@@ -5,6 +5,7 @@
     Provide conversion system from string to token list.
 """
 
+from tinylisp.interpreter import Procedure, Enviroment, Error
 from tinylisp.parser import ListParser
 
 
@@ -13,7 +14,7 @@ class LispInterpreter:
         Provide conversion system from string to token list.
     """
     def __init__(self):
-        self.global_env = LispInterpreter.add_globals(Env())
+        self.global_env = LispInterpreter.add_globals(Enviroment.Env())
 
     @staticmethod
     def add_globals(env):
@@ -27,22 +28,45 @@ class LispInterpreter:
         env.update(vars(cmath))  # sin, sqrt, ...
         env.update(
             {
-                '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
+                '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
                 '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
                 'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
-                'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
-                'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
-                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, str),
-                'atom': lambda x: LispInterpreter._is_atom(x), 'integerp': lambda x: isinstance(x, int),
-                'print': print
+                'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': LispInterpreter._append,
+                'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list), 'last': lambda x: [x[-1]],
+                'reverse': LispInterpreter._reverse,
+                'null?': lambda x: x is None or x == [], 'symbol?': lambda x: isinstance(x, str),
+                'atom': LispInterpreter._is_atom, 'integerp': lambda x: isinstance(x, int),
+                'print': LispInterpreter.to_string
             })
         return env
 
     @staticmethod
+    def _append(x, y):
+        if not isinstance(x, list):
+            return Error.Error('unexpected argument {0} for append'.format(x))
+        for elem in y:
+            x.append(elem)
+        return x
+
+    @staticmethod
+    def _reverse(x):
+        if isinstance(x, list):
+            x.reverse()
+        return x
+
+    @staticmethod
     def _is_atom(val):
-        if isinstance(val, str) or isinstance(val, int) or isinstance(val, float):
+        if isinstance(val, (float, int, str)):
             return True
         return False
+
+    @staticmethod
+    def to_string(exp):
+        """
+            PythonオブジェクトをLispの読める文字列に戻す。
+        """
+        isa = isinstance
+        return '(' + ' '.join(map(LispInterpreter.to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
     def eval(self, x, env=None):
         """
@@ -51,12 +75,16 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
+        ret_value = None
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
                 return None
             if isinstance(x, str):  # 変数参照
-                #t = env.find(x)
-                return env.find(x)[x]
+                # t = env.find(x)
+                val = env.find(x)
+                if not isinstance(val, Error.Error):
+                    val = val[x]
+                return val
             elif not isinstance(x, list):  # 定数リテラル
                 return x
             elif x[0] == 'quote':  # (quote exp)
@@ -82,14 +110,15 @@ class LispInterpreter:
                 return None
             elif x[0] == 'lambda':  # (lambda (var*) exp)
                 (_, vars, exp) = x
-                return Procedure(vars, exp, env)#lambda *args: self.eval(exp, Env(vars, args, env))
+                return Procedure.Procedure(vars, exp, env)
+                # lambda *args: self.eval(exp, Env(vars, args, env))
             elif x[0] == 'begin':  # (begin exp*)
                 for exp in x[1:]:
                     val = self.eval(exp, env)
                     return val
-            elif x[0] == 'call':
-                (_, exp) = x
-                return self.eval(exp, env)
+            # elif x[0] == 'call':
+            #     (_, exp) = x
+            #     return self.eval(exp, env)
             elif x[0] == 'trace':
                 for key, value in env.items():
                     print('{0} : {1}'.format(key, value))
@@ -100,49 +129,25 @@ class LispInterpreter:
                 exps = [self.eval(exp, env) for exp in x]
                 proc = exps.pop(0)
                 try:
-                    if isinstance(proc, Procedure):
+                    if isinstance(proc, Procedure.Procedure):
                         x = proc.exp
-                        env = Env(proc.parms, exps, proc.env)
+                        env = Enviroment.Env(proc.parms, exps, proc.env)
                     else:
-                        return proc(*exps)
+                        val = proc(*exps)
+                        return val
                 except TypeError:
                     if isinstance(x[0], str):
                         return proc
                     return x
-
-
-class Procedure(object):
-    """
-        A user-defined Scheme procedure.
-    """
-    def __init__(self, parms, exp, env):
-        self.parms, self.exp, self.env = parms, exp, env
-
-    def __call__(self, *args):
-        return eval(self.exp, Env(self.parms, args, self.env))
-
-
-class Env(dict):
-    """
-        An environment: a dict of {'var':val} pairs, with an outer Env.
-    """
-
-    def __init__(self, parms=(), args=(), outer=None):
-        super().__init__()
-        self.update(zip(parms, args))
-        self._outer = outer
-
-    def find(self, var):
-        """
-            Find the innermost Env where var appears.
-        """
-        # return self if var in self else self._outer.find(var)
-        if var in self:
-            return self
-        return self._outer.find(var)
+        return ret_value
 
 
 def pinput(prompt=''):
+    """
+
+        :param prompt:
+        :return:
+    """
     mbc = 0
     text = ''
     rprompt = prompt
@@ -163,16 +168,7 @@ def pinput(prompt=''):
     return text
 
 
-def to_string(exp):
-    """
-        PythonオブジェクトをLispの読める文字列に戻す。
-    """
-    isa = isinstance
-    return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
-
-
-
-def repl_with_asm(translator, trace=False, prompt='listpy> '):
+def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter.
         :param translator:
@@ -210,8 +206,10 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
                 if val == 'exit':
                     is_exit = True
                     break
+                elif isinstance(val, Error.Error):
+                    print(val.get_err_msg())
                 elif val is not None:
-                    print(to_string(val))
+                    print(LispInterpreter.to_string(val))
                 else:
                     continue
         else:
@@ -219,10 +217,11 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
     return 0
 
 
-def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> '):
+def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
+        :param translator:
         :param trace:
         :param prompt:
         :return: exit code
@@ -247,6 +246,6 @@ def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> 
                 print(elem)
             val = interp.eval(elem)
             if val is not None:
-                print(to_string(val))
+                print(LispInterpreter.to_string(val))
 
     return 0

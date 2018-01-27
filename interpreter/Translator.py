@@ -27,7 +27,7 @@ class Translator:
             :param text: LISP syntax text
             :return: Tiny LIST
         """
-        text = Common.replace_newline(text).replace('\n', '@n')
+        text = Common.replace_newline(text).replace('\n', '@n').replace('"', '\\"')
         command = self._command.format(self._python, self._sep, self._dirpath, text, self._parser)
 
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -23,7 +23,7 @@ def main():
     if args.message:
         arg = args.message
         if isinstance(arg, str):
-            arg = arg.replace('"', '')
+            # arg = arg.replace('"', '\\"')
             print(arg, end='')
 
 

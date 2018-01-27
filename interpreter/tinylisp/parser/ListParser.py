@@ -57,7 +57,13 @@ class ListParser():
     @staticmethod
     def _resolve(id, val):
         if id == 'IDENTIFIER':
-            return str(val)
+            text = str(val)
+            if text == 'nil':
+                return None
+            return text
+        elif id == 'WQUOTED':
+            text = str(val)
+            return text
         elif id == 'INTEGER':
             return int(val)
         elif id == 'FLOAT':
@@ -88,6 +94,10 @@ class ListParser():
 
 
 def main():
+    """
+        main function.
+        :return: exit code
+    """
     text = """
 (LIST
         (
