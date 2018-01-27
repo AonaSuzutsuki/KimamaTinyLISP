@@ -1,0 +1,8 @@
+(+ 1 2)
+(+ 1 (+ 1 2))
+(defun test
+	(lambda
+		(a b c) (+ a (+ b c))
+	)
+)
+(test 1 2 3)

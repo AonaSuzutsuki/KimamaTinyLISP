@@ -1,5 +1,3 @@
-
-special		"+"|"-"|"/"|"*"|"?"|"!"|">"|"<"|"="|"^"|"_"
 %{
 int linecounter = 1;
 %}
@@ -8,14 +6,12 @@ int linecounter = 1;
 
 "-"[0-9]+\.[0-9]+|[0-9]+\.[0-9]+											{ return(FLOAT); }
 "-"[0-9]+|[0-9]+															{ return(INTEGER); }
-([a-zA-Z]|{special})([a-zA-Z0-9]|{special})*								{ return(IDENTIFIER); }
-
-"'"																			{ return(QUOTE); }
+([a-zA-Z]|"+"|"-"|"/"|"*"|"?"|">"|"<"|"="|"^")([a-zA-Z0-9])*				{ return(IDENTIFIER); }
 
 "("																			{ return(LPAREN); }
 ")"																			{ return(RPAREN); }
 
-"\""([A-Za-z0-9]|":"|"/"|"."|"-"|" "|"("|")")*"\""							{ return(WQUOTED); }
+"\""([A-Za-z0-9]|":"|"/"|"."|"-")*"\""										{ return(WQUOTED); }
 "@n"																		{ linecounter++; }
 "\n"																		{ linecounter++; }
 "\r\n"																		{ linecounter++; }

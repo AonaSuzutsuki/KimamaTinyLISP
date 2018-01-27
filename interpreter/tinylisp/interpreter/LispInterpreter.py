@@ -5,7 +5,8 @@
     Provide conversion system from string to token list.
 """
 
-from tinylisp.parser import LispLexer, LispParser, ListParser
+from tinylisp.interpreter import Procedure, Enviroment, Error
+from tinylisp.parser import ListParser
 
 
 class LispInterpreter:
@@ -13,7 +14,7 @@ class LispInterpreter:
         Provide conversion system from string to token list.
     """
     def __init__(self):
-        self.global_env = LispInterpreter.add_globals(Env())
+        self.global_env = LispInterpreter.add_globals(Enviroment.Env())
 
     @staticmethod
     def add_globals(env):
@@ -27,15 +28,45 @@ class LispInterpreter:
         env.update(vars(cmath))  # sin, sqrt, ...
         env.update(
             {
-                '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
+                '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
                 '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
                 'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
-                'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
-                'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
-                'null?': lambda x: x == [], 'symbol?': lambda x: isinstance(x, str),
-                'print': print
+                'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': LispInterpreter._append,
+                'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list), 'last': lambda x: [x[-1]],
+                'reverse': LispInterpreter._reverse,
+                'null?': lambda x: x is None or x == [], 'symbol?': lambda x: isinstance(x, str),
+                'atom': LispInterpreter._is_atom, 'integerp': lambda x: isinstance(x, int),
+                'print': LispInterpreter.to_string
             })
         return env
+
+    @staticmethod
+    def _append(x, y):
+        if not isinstance(x, list):
+            return Error.Error('unexpected argument {0} for append'.format(x))
+        for elem in y:
+            x.append(elem)
+        return x
+
+    @staticmethod
+    def _reverse(x):
+        if isinstance(x, list):
+            x.reverse()
+        return x
+
+    @staticmethod
+    def _is_atom(val):
+        if isinstance(val, (float, int, str)):
+            return True
+        return False
+
+    @staticmethod
+    def to_string(exp):
+        """
+            PythonオブジェクトをLispの読める文字列に戻す。
+        """
+        isa = isinstance
+        return '(' + ' '.join(map(LispInterpreter.to_string, exp)) + ')' if isa(exp, list) else str(exp)
 
     def eval(self, x, env=None):
         """
@@ -44,75 +75,73 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
-        if x is None or (isinstance(x, list) and len(x) <= 0):
-            return None
-        elif isinstance(x, str):  # 変数参照
-            #t = env.find(x)
-            return env.find(x)[x]
-        elif not isinstance(x, list):  # 定数リテラル
-            return x
-        elif x[0] == 'quote':  # (quote exp)
-            (_, exp) = x
-            return exp
-        elif x[0] == 'if':  # (if test conseq alt)
-            (_, test, conseq, alt) = x
-            return self.eval((conseq if self.eval(test, env) else alt), env)
-        elif x[0] == 'set!':  # (set! var exp)
-            (_, var, exp) = x
-            env.find(var)[var] = self.eval(exp, env)
-            return None
-        elif x[0] == 'defun':  # (define var exp)
-            (_, var, exp) = x
-            env[var] = self.eval(exp, env)
-            return None
-        elif x[0] == 'lambda':  # (lambda (var*) exp)
-            (_, vars, exp) = x
-            return lambda *args: self.eval(exp, Env(vars, args, env))
-        elif x[0] == 'begin':  # (begin exp*)
-            for exp in x[1:]:
-                val = self.eval(exp, env)
+        while True:
+            if x is None or (isinstance(x, list) and len(x) <= 0):
+                return None
+            if isinstance(x, str):  # 変数参照
+                val = env.find(x)
+                if not isinstance(val, Error.Error):
+                    val = val[x]
                 return val
-        elif x[0] == 'call':
-            (_, exp) = x
-            return self.eval(exp, env)
-        elif x[0] == 'trace':
-            for key, value in env.items():
-                print('{0} : {1}'.format(key, value))
-            return None
-        elif x[0] == 'exit':
-            return 'exit'
-        else:  # (proc exp*)
-            exps = [self.eval(exp, env) for exp in x]
-            proc = exps.pop(0)
-            try:
-                return proc(*exps)
-            except TypeError:
-                if isinstance(x[0], str):
-                    return proc
+            elif not isinstance(x, list):  # 定数リテラル
                 return x
-
-
-class Env(dict):
-    """
-        環境: ペア{'var':val}のdictで、外部環境(outer)を持つ。
-    """
-
-    def __init__(self, parms=(), args=(), outer=None):
-        super().__init__()
-        self.update(zip(parms, args))
-        self._outer = outer
-
-    def find(self, var):
-        """
-            var が現れる一番内側のEnvを見つける。
-        """
-        # return self if var in self else self._outer.find(var)
-        if var in self:
-            return self
-        return self._outer.find(var)
+            elif x[0] == 'quote':  # (quote exp)
+                (_, exp) = x
+                return exp
+            elif x[0] == 'if':  # (if test conseq alt)
+                (_, test, conseq, alt) = x
+                return self.eval((conseq if self.eval(test, env) else alt), env)
+            elif x[0] == 'cond':
+                exps = x[1:]
+                for exp in exps:
+                    if exp[0] == 't':
+                        return self.eval(exp[1], env)
+                    elif self.eval(exp[0], env):
+                        return self.eval(exp[1], env)
+            elif x[0] == 'set!':  # (set! var exp)
+                (_, var, exp) = x
+                env.find(var)[var] = self.eval(exp, env)
+                return None
+            elif x[0] == 'defun':  # (define var exp)
+                (_, var, exp) = x
+                env[var] = self.eval(exp, env)
+                return None
+            elif x[0] == 'lambda':  # (lambda (var*) exp)
+                (_, vars, exp) = x
+                return Procedure.Procedure(vars, exp, env)
+                # lambda *args: self.eval(exp, Env(vars, args, env))
+            elif x[0] == 'begin':  # (begin exp*)
+                for exp in x[1:]:
+                    val = self.eval(exp, env)
+                    return val
+            elif x[0] == 'trace':
+                for key, value in env.items():
+                    print('{0} : {1}'.format(key, value))
+                return None
+            elif x[0] == 'exit':
+                return 'exit'
+            else:  # (proc exp*)
+                exps = [self.eval(exp, env) for exp in x]
+                proc = exps.pop(0)
+                try:
+                    if isinstance(proc, Procedure.Procedure):
+                        x = proc.exp
+                        env = Enviroment.Env(proc.parms, exps, proc.env)
+                    else:
+                        val = proc(*exps)
+                        return val
+                except TypeError:
+                    if isinstance(x[0], str):
+                        return proc
+                    return x
 
 
 def pinput(prompt=''):
+    """
+
+        :param prompt:
+        :return:
+    """
     mbc = 0
     text = ''
     rprompt = prompt
@@ -133,37 +162,7 @@ def pinput(prompt=''):
     return text
 
 
-def to_string(exp):
-    """
-        PythonオブジェクトをLispの読める文字列に戻す。
-    """
-    isa = isinstance
-    return '(' + ' '.join(map(to_string, exp)) + ')' if isa(exp, list) else str(exp)
-
-
-def repl(trace=False, prompt='lispy> '):
-    """
-        Prompt of native lisp interpreter.
-    """
-    lexerp = LispLexer.LispLexer()
-    parserp = LispParser.LispParser()
-    interp = LispInterpreter()
-
-    while True:
-        list = parserp.parse(lexerp.make_token(pinput(prompt)))
-        if trace:
-            print(list)
-        val = interp.eval(list)
-        if val == 'exit':
-            break
-        elif val is not None:
-            print(to_string(val))
-        else:
-            continue
-    return 0
-
-
-def repl_with_asm(translator, trace=False, prompt='listpy> '):
+def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter.
         :param translator:
@@ -201,8 +200,10 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
                 if val == 'exit':
                     is_exit = True
                     break
+                elif isinstance(val, Error.Error):
+                    print(val.get_err_msg())
                 elif val is not None:
-                    print(to_string(val))
+                    print(LispInterpreter.to_string(val))
                 else:
                     continue
         else:
@@ -210,10 +211,11 @@ def repl_with_asm(translator, trace=False, prompt='listpy> '):
     return 0
 
 
-def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> '):
+def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
+        :param translator:
         :param trace:
         :param prompt:
         :return: exit code
@@ -238,6 +240,6 @@ def repl_with_list_from_file(filename, translator, trace=False, prompt='listpy> 
                 print(elem)
             val = interp.eval(elem)
             if val is not None:
-                print(to_string(val))
+                print(LispInterpreter.to_string(val))
 
     return 0
