@@ -65,7 +65,7 @@ class ListParser:
             return text
         elif id == 'WQUOTED':
             text = str(val)
-            return text
+            return '"' + text + '"'
         elif id == 'INTEGER':
             return int(val)
         elif id == 'FLOAT':
@@ -79,9 +79,27 @@ class ListParser:
 
     @staticmethod
     def _preparse(text):
+        import shlex
         text = ListParser._replace_newline(text).replace('\n', '')
-        text = text.replace('(', ' ( ').replace(')', ' ) ').split()
-        return text
+        text = text.replace('(', ' ( ').replace(')', ' ) ')
+        a_list = shlex.split(text)
+
+        # iswquoted = False
+        # a_list = []
+        # pretext = ''
+        # for chara in text:
+        #     if chara == '' or chara == ' ':
+        #         continue
+        #     elif iswquoted or chara == '"':
+        #         pretext += chara
+        #         iswquoted = True
+        #     elif iswquoted and chara == '"':
+        #         a_list.append(pretext)
+        #         pretext = ''
+        #         iswquoted = False
+        #     else:
+        #         a_list.append(chara)
+        return a_list
 
     @staticmethod
     def _convert_list(tokens):

@@ -78,7 +78,9 @@ class LispInterpreter:
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
                 return None
-            if isinstance(x, str):  # 変数参照
+            if isinstance(x, str) and x[0] == '"':  # Wquote
+                return x[1:-1]
+            elif isinstance(x, str):  # 変数参照
                 val = env.find(x)
                 if not isinstance(val, Error.Error):
                     val = val[x]
