@@ -200,14 +200,13 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="Sexpr">Sexpr:</a></p>
-      <img border="0" src="diagram/Sexpr.png" height="80" width="150" usemap="#Sexpr.map"><map name="Sexpr.map">
-         <area shape="rect" coords="49,1,101,33" href="#Atom" title="Atom">
-         <area shape="rect" coords="49,45,89,77" href="#List" title="List"></map>
+      <img border="0" src="diagram/Sexpr.png" height="80" width="234" usemap="#Sexpr.map"><map name="Sexpr.map">
+         <area shape="rect" coords="133,1,185,33" href="#Atom" title="Atom">
+         <area shape="rect" coords="133,45,173,77" href="#List" title="List"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#Sexpr" title="Sexpr" shape="rect">Sexpr</a>    ::= <a href="#Atom" title="Atom" shape="rect">Atom</a>
-           | <a href="#List" title="List" shape="rect">List</a></pre></div>
+         <div class="ebnf"><pre><a href="#Sexpr" title="Sexpr" shape="rect">Sexpr</a>    ::= "'"? ( <a href="#Atom" title="Atom" shape="rect">Atom</a> | <a href="#List" title="List" shape="rect">List</a> )</pre></div>
          
       </p>
       
@@ -240,12 +239,13 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="Atom">Atom:</a></p>
-      <img border="0" src="diagram/Atom.png" height="696" width="492">
+      <img border="0" src="diagram/Atom.png" height="1654" width="492">
       
       <p>
          
-         <div class="ebnf"><pre><a href="#Atom" title="Atom" shape="rect">Atom</a>     ::= [a-zA-Z+#x2D/*?&gt;&lt;=^] [a-zA-Z0-9]*
-           | '-'? [0-9]+ ( '.' [0-9]+ )?</pre></div>
+         <div class="ebnf"><pre><a href="#Atom" title="Atom" shape="rect">Atom</a>     ::= [a-zA-Z+#x2D/*?!&gt;&lt;=^] [a-zA-Z0-9+#x2D/*?!&gt;&lt;=^]*
+           | '-'? [0-9]+ ( '.' [0-9]+ )?
+           | '"' [A-Za-z0-9:/.#x2D ()]* '"'</pre></div>
          
       </p>
       
