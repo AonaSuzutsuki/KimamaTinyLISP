@@ -16,7 +16,7 @@ def cdr(list):
     return list[1:]
 
 
-class ListParser():
+class ListParser:
     """
         Parse TinyLIST from yacc tree.
     """
@@ -40,6 +40,8 @@ class ListParser():
                 celem = car(elem)
                 if celem == 'LIST':  # ネストされたリスト判定
                     rList.append(ListParser._parse(cdr(elem), []))
+                elif celem == 'EMPTY':
+                    return []
                 elif celem == 'ATOM':  # アトム判定
                     (id, val) = cdr(elem)[0]
                     val = ListParser._resolve(id, val)
