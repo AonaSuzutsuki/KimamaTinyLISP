@@ -84,7 +84,6 @@ class LispInterpreter:
 
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
-                print('nil')
                 return None
             if isinstance(x, str) and x[0] == '"':  # Wquote
                 return x[1:-1]
@@ -224,6 +223,8 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
                     print(val.get_err_msg())
                 elif val is not None:
                     print(LispInterpreter.to_string(val))
+                elif val is None:
+                    print('nil')
                 else:
                     continue
         else:
@@ -261,5 +262,7 @@ def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp
             val = interp.eval(elem)
             if val is not None:
                 print(LispInterpreter.to_string(val))
+            elif val is None:
+                print('nil')
 
     return 0

@@ -34,7 +34,9 @@
   (cond ((not (integerp n)) nil)
         ((< n 0) nil)
         ((= n 0) 1)
-        (t (* n (factorial (- n 1)))))))
+        (t (* n (factorial (- n 1))))
+   )
+))
 
 (defun factorials (lambda (n)
   (cond ((not (integerp n)) nil)
