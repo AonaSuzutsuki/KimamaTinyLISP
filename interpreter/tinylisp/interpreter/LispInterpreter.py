@@ -75,12 +75,10 @@ class LispInterpreter:
         if env is None:
             env = self.global_env
 
-        ret_value = None
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
                 return None
             if isinstance(x, str):  # 変数参照
-                # t = env.find(x)
                 val = env.find(x)
                 if not isinstance(val, Error.Error):
                     val = val[x]
@@ -116,9 +114,6 @@ class LispInterpreter:
                 for exp in x[1:]:
                     val = self.eval(exp, env)
                     return val
-            # elif x[0] == 'call':
-            #     (_, exp) = x
-            #     return self.eval(exp, env)
             elif x[0] == 'trace':
                 for key, value in env.items():
                     print('{0} : {1}'.format(key, value))
@@ -139,7 +134,6 @@ class LispInterpreter:
                     if isinstance(x[0], str):
                         return proc
                     return x
-        return ret_value
 
 
 def pinput(prompt=''):
