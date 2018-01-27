@@ -30,15 +30,22 @@ class LispInterpreter:
             {
                 '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
                 '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
-                'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
+                'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: LispInterpreter._cons(x, y),
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': LispInterpreter._append,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list), 'last': lambda x: [x[-1]],
                 'reverse': LispInterpreter._reverse,
                 'null?': lambda x: x is None or x == [], 'symbol?': lambda x: isinstance(x, str),
                 'atom': LispInterpreter._is_atom, 'integerp': lambda x: isinstance(x, int),
-                'print': LispInterpreter.to_string
+                'print': lambda x: print(LispInterpreter.to_string(x)), 'princ': lambda x: print(x, end='')
             })
         return env
+
+    @staticmethod
+    def _cons(x, y):
+        a_list = [x]
+        if y is not None:
+            a_list = [x] + y
+        return a_list
 
     @staticmethod
     def _append(x, y):
@@ -77,6 +84,7 @@ class LispInterpreter:
 
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
+                print('nil')
                 return None
             if isinstance(x, str) and x[0] == '"':  # Wquote
                 return x[1:-1]
@@ -100,6 +108,11 @@ class LispInterpreter:
                         return self.eval(exp[1], env)
                     elif self.eval(exp[0], env):
                         return self.eval(exp[1], env)
+            elif x[0] == 'progn':
+                exps = x[1:]
+                for exp in exps:
+                    self.eval(exp, env)
+                return None
             elif x[0] == 'set!':  # (set! var exp)
                 (_, var, exp) = x
                 env.find(var)[var] = self.eval(exp, env)
@@ -130,7 +143,9 @@ class LispInterpreter:
                         x = proc.exp
                         env = Enviroment.Env(proc.parms, exps, proc.env)
                     else:
-                        if not LispInterpreter._is_atom(proc):
+                        if proc is None:
+                            return None
+                        elif not LispInterpreter._is_atom(proc):
                             val = proc(*exps)
                             return val
                         else:
