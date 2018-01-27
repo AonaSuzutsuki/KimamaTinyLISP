@@ -1,9 +1,9 @@
 %{
 #include "defs.h"
 #define YYSTYPE Cell *
-char s[1024];
+char s[1024] = { 0 };
 %}
-%token	IDENTIFIER FLOAT INTEGER LPAREN RPAREN WQUOTED UNKNOWN;
+%token	IDENTIFIER FLOAT INTEGER QUOTE LPAREN RPAREN WQUOTED UNKNOWN;
 %%
 Program
 	: Statements					{  }
@@ -14,6 +14,19 @@ Statement
 	: Sexpr							{ tree($1); }
 Sexpr
 	: Atom							{ $$ = node("ATOM", $1); }
+	| QUOTE Atom					{
+										Cell *quote = leaf("IDENTIFIER", "quote");
+										Cell *atom = node("ATOM", quote);
+										Cell *con = cons(atom, node("ATOM", $2));
+										$$ = node("LIST", con);
+									}
+	| QUOTE List					{
+										Cell *quote = leaf("IDENTIFIER", "quote");
+										Cell *atom = node("ATOM", quote);
+										Cell *con = cons(atom, node("LIST", $2));
+										Cell *list = node("LIST", con);
+										$$ = list;
+									}
 	| List							{ $$ = node("LIST", $1); }
 	;
 List
@@ -25,9 +38,10 @@ Members
 	| Members Sexpr					{ $$ = cons($1, $2); }
 	;
 Atom
-	: IDENTIFIER					{ $$ = leaf("IDENTIFIER", yytext); }
-	| FLOAT							{ $$ = leaf("FLOAT", yytext); }
+	: FLOAT							{ $$ = leaf("FLOAT", yytext); }
 	| INTEGER						{ $$ = leaf("INTEGER", yytext); }
+	| IDENTIFIER					{ $$ = leaf("IDENTIFIER", yytext); }
+	| WQUOTED						{ $$ = leaf("WQUOTED", yytext); }
 	;
 %%
 #include "lex.yy.c"

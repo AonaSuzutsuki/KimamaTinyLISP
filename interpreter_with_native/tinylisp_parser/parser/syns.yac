@@ -1,0 +1,37 @@
+%{
+#include "defs.h"
+#define YYSTYPE Cell *
+char s[1024];
+%}
+%token	IDENTIFIER FLOAT INTEGER LPAREN RPAREN WQUOTED UNKNOWN;
+%%
+Program
+	: Statements					{  }
+Statements
+	: Statement						{  }
+	| Statements Statement			{  }
+Statement
+	: Sexpr							{ tree($1); }
+Sexpr
+	: Atom							{ $$ = node("ATOM", $1); }
+	| List							{ $$ = node("LIST", $1); }
+	;
+List
+	: LPAREN Members RPAREN			{ $$ = $2; }
+	| LPAREN RPAREN					{  }
+	;
+Members
+	: Sexpr							{ $$ = $1; }
+	| Members Sexpr					{ $$ = cons($1, $2); }
+	;
+Atom
+	: IDENTIFIER					{ $$ = leaf("IDENTIFIER", yytext); }
+	| FLOAT							{ $$ = leaf("FLOAT", yytext); }
+	| INTEGER						{ $$ = leaf("INTEGER", yytext); }
+	;
+%%
+#include "lex.yy.c"
+void yyerror(char *s) {
+	fprintf(stderr, "\n%s at %d: nearby \"%s\"\n\n", s, linecounter, yytext);
+	exit(EXIT_FAILURE);
+}

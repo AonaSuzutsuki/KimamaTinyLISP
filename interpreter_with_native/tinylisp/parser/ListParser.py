@@ -48,22 +48,12 @@ class ListParser():
                     ListParser._parse(elem, rList)
             elif elem == 'LIST':  # 一番初めのリスト判定
                 ListParser._parse(elem, rList)
-            elif elem == 'ATOM':
-                (id, val) = cdr(aList)[0]
-                val = ListParser._resolve(id, val)
-                return val
         return rList
 
     @staticmethod
     def _resolve(id, val):
         if id == 'IDENTIFIER':
-            text = str(val)
-            if text == 'nil':
-                return None
-            return text
-        elif id == 'WQUOTED':
-            text = str(val)
-            return text
+            return str(val)
         elif id == 'INTEGER':
             return int(val)
         elif id == 'FLOAT':
@@ -94,10 +84,6 @@ class ListParser():
 
 
 def main():
-    """
-        main function.
-        :return: exit code
-    """
     text = """
 (LIST
         (
