@@ -128,12 +128,15 @@ class LispInterpreter:
                         x = proc.exp
                         env = Enviroment.Env(proc.parms, exps, proc.env)
                     else:
-                        val = proc(*exps)
-                        return val
-                except TypeError:
-                    if isinstance(x[0], str):
-                        return proc
-                    return x
+                        if not LispInterpreter._is_atom(proc):
+                            val = proc(*exps)
+                            return val
+                        else:
+                            if isinstance(x[0], str):
+                                return proc
+                            return x
+                except TypeError as type_error:
+                    return Error.Error(type_error.args[0])
 
 
 def pinput(prompt=''):
