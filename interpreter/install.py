@@ -15,7 +15,7 @@ def main():
 
     run = 'run.py'
     setup = 'setup.py'
-    translator = 'Translator.py'
+    translator = 'Messenger.py
     echo = 'echo.py'
     common = 'Common.py'
     runbat = 'run.bat'

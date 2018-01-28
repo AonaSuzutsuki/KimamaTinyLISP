@@ -6,7 +6,7 @@
 """
 
 import argparse
-import Translator
+import Messenger
 from tinylisp.interpreter import LispInterpreter
 
 
@@ -23,7 +23,7 @@ def main():
     parser.add_argument('-t', dest='trace', nargs='?', default=False, help='Whether to trace [true/false]')
     args = parser.parse_args()
 
-    translator = Translator.Translator(args.python, args.parser)
+    translator = Messenger.Messenger(args.python, args.parser)
 
     if args.file is not None:
         code = LispInterpreter.repl_with_list_from_file(args.file, translator, args.trace == 'true')

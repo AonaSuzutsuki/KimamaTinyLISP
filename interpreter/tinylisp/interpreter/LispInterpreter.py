@@ -14,10 +14,10 @@ class LispInterpreter:
         Provide conversion system from string to token list.
     """
     def __init__(self):
-        self.global_env = LispInterpreter.add_globals(Enviroment.Env())
+        self.global_env = LispInterpreter._add_globals(Enviroment.Env())
 
     @staticmethod
-    def add_globals(env):
+    def _add_globals(env):
         """
             環境にScheme標準の手続きをいくつか追加する
         """
@@ -155,7 +155,7 @@ class LispInterpreter:
                     return Error.Error(type_error.args[0])
 
 
-def pinput(prompt=''):
+def _pinput(prompt=''):
     """
 
         :param prompt:
@@ -181,10 +181,10 @@ def pinput(prompt=''):
     return text
 
 
-def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
+def repl_with_asm(messenger, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter.
-        :param translator:
+        :param messenger:
         :param trace:
         :param prompt:
         :return: exit code
@@ -197,7 +197,7 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     #         )
     #         (test 1)
     #         """)
-    list_parser = ListParser.ListParser()
+    list_parser = ListParser.ListParser
     interp = LispInterpreter()
     #
     # a_list = list_parser.parse(out)
@@ -208,8 +208,8 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
 
     is_exit = False
     while not is_exit:
-        text = pinput(prompt)
-        suc, out = translator.send(text)
+        text = _pinput(prompt)
+        suc, out = messenger.send(text)
         if suc:
             a_list = list_parser.parse(out)
             for elem in a_list:
@@ -220,7 +220,7 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
                     is_exit = True
                     break
                 elif isinstance(val, Error.Error):
-                    print(val.get_err_msg())
+                    print(val.err_msg())
                 elif val is not None:
                     print(LispInterpreter.to_string(val))
                 elif val is None:
@@ -232,24 +232,24 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     return 0
 
 
-def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp> '):
+def repl_with_list_from_file(filename, messenger, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
-        :param translator:
+        :param messenger:
         :param trace:
         :param prompt:
         :return: exit code
     """
     with open(filename, "rU", encoding="utf_8") as a_file:
         interp = LispInterpreter()
-        list_parser = ListParser.ListParser()
+        list_parser = ListParser.ListParser
         text = ''
         for line in a_file:
             if line != '':
                 text += line
 
-        suc, out = translator.send(text)
+        suc, out = messenger.send(text)
         if not suc:
             print(out)
             return 1
