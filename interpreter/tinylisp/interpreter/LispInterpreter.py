@@ -14,10 +14,10 @@ class LispInterpreter:
         Provide conversion system from string to token list.
     """
     def __init__(self):
-        self.global_env = LispInterpreter.add_globals(Enviroment.Env())
+        self.global_env = LispInterpreter._add_globals(Enviroment.Env())
 
     @staticmethod
-    def add_globals(env):
+    def _add_globals(env):
         """
             環境にScheme標準の手続きをいくつか追加する
         """
@@ -28,17 +28,24 @@ class LispInterpreter:
         env.update(vars(cmath))  # sin, sqrt, ...
         env.update(
             {
-                '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
+                '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
                 '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq, '^': op.pow,
-                'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': lambda x, y: [x] + y,
+                'equal': op.eq, 'eq': op.is_, 'length': len, 'cons': lambda x, y: LispInterpreter._cons(x, y),
                 'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': LispInterpreter._append,
                 'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list), 'last': lambda x: [x[-1]],
                 'reverse': LispInterpreter._reverse,
                 'null?': lambda x: x is None or x == [], 'symbol?': lambda x: isinstance(x, str),
                 'atom': LispInterpreter._is_atom, 'integerp': lambda x: isinstance(x, int),
-                'print': LispInterpreter.to_string
+                'print': lambda x: print(LispInterpreter.to_string(x)), 'princ': lambda x: print(x, end='')
             })
         return env
+
+    @staticmethod
+    def _cons(x, y):
+        a_list = [x]
+        if y is not None:
+            a_list = [x] + y
+        return a_list
 
     @staticmethod
     def _append(x, y):
@@ -78,7 +85,9 @@ class LispInterpreter:
         while True:
             if x is None or (isinstance(x, list) and len(x) <= 0):
                 return None
-            if isinstance(x, str):  # 変数参照
+            if isinstance(x, str) and x[0] == '"':  # Wquote
+                return x[1:-1]
+            elif isinstance(x, str):  # 変数参照
                 val = env.find(x)
                 if not isinstance(val, Error.Error):
                     val = val[x]
@@ -98,6 +107,11 @@ class LispInterpreter:
                         return self.eval(exp[1], env)
                     elif self.eval(exp[0], env):
                         return self.eval(exp[1], env)
+            elif x[0] == 'progn':
+                exps = x[1:]
+                for exp in exps:
+                    self.eval(exp, env)
+                return None
             elif x[0] == 'set!':  # (set! var exp)
                 (_, var, exp) = x
                 env.find(var)[var] = self.eval(exp, env)
@@ -128,15 +142,20 @@ class LispInterpreter:
                         x = proc.exp
                         env = Enviroment.Env(proc.parms, exps, proc.env)
                     else:
-                        val = proc(*exps)
-                        return val
-                except TypeError:
-                    if isinstance(x[0], str):
-                        return proc
-                    return x
+                        if proc is None:
+                            return None
+                        elif not LispInterpreter._is_atom(proc):
+                            val = proc(*exps)
+                            return val
+                        else:
+                            if isinstance(x[0], str):
+                                return proc
+                            return x
+                except TypeError as type_error:
+                    return Error.Error(type_error.args[0])
 
 
-def pinput(prompt=''):
+def _pinput(prompt=''):
     """
 
         :param prompt:
@@ -162,10 +181,10 @@ def pinput(prompt=''):
     return text
 
 
-def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
+def repl_with_asm(messenger, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter.
-        :param translator:
+        :param messenger:
         :param trace:
         :param prompt:
         :return: exit code
@@ -178,7 +197,7 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     #         )
     #         (test 1)
     #         """)
-    list_parser = ListParser.ListParser()
+    list_parser = ListParser.ListParser
     interp = LispInterpreter()
     #
     # a_list = list_parser.parse(out)
@@ -189,8 +208,8 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
 
     is_exit = False
     while not is_exit:
-        text = pinput(prompt)
-        suc, out = translator.send(text)
+        text = _pinput(prompt)
+        suc, out = messenger.send(text)
         if suc:
             a_list = list_parser.parse(out)
             for elem in a_list:
@@ -201,9 +220,11 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
                     is_exit = True
                     break
                 elif isinstance(val, Error.Error):
-                    print(val.get_err_msg())
+                    print(val.err_msg())
                 elif val is not None:
                     print(LispInterpreter.to_string(val))
+                elif val is None:
+                    print('nil')
                 else:
                     continue
         else:
@@ -211,24 +232,24 @@ def repl_with_asm(translator, trace=False, prompt='tinylisp> '):
     return 0
 
 
-def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp> '):
+def repl_with_list_from_file(filename, messenger, trace=False, prompt='tinylisp> '):
     """
         Prompt of tiny lisp interpreter from file.
         :param filename:
-        :param translator:
+        :param messenger:
         :param trace:
         :param prompt:
         :return: exit code
     """
     with open(filename, "rU", encoding="utf_8") as a_file:
         interp = LispInterpreter()
-        list_parser = ListParser.ListParser()
+        list_parser = ListParser.ListParser
         text = ''
         for line in a_file:
             if line != '':
                 text += line
 
-        suc, out = translator.send(text)
+        suc, out = messenger.send(text)
         if not suc:
             print(out)
             return 1
@@ -241,5 +262,7 @@ def repl_with_list_from_file(filename, translator, trace=False, prompt='tinylisp
             val = interp.eval(elem)
             if val is not None:
                 print(LispInterpreter.to_string(val))
+            elif val is None:
+                print('nil')
 
     return 0

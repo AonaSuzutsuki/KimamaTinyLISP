@@ -2,6 +2,8 @@
 set arg=%1
 If %arg%==clean (
 	goto CLEAN
+) Else If %arg%==test (
+	goto TEST
 ) Else (
 	goto ALL
 )
@@ -9,9 +11,6 @@ If %arg%==clean (
 :CLEAN
 cd interpreter
 cd tinylisp_parser
-cd formatter
-make -f Makefile.win clean
-cd ../
 cd parser
 make -f Makefile.win clean
 cd ../
@@ -23,9 +22,6 @@ goto END
 :ALL
 cd interpreter
 cd tinylisp_parser
-cd formatter
-make -f Makefile.win install
-cd ../
 cd parser
 make -f Makefile.win install
 cd ../
@@ -33,5 +29,10 @@ cd ../
 python install.py
 cd ../
 goto END
+
+:TEST
+cd bin
+python interpreter\run.py -p parser.exe -py python interpreter\source.txt
+cd ../
 
 :END
