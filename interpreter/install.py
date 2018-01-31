@@ -15,17 +15,19 @@ def main():
 
     run = 'run.py'
     setup = 'setup.py'
-    translator = 'Messenger.py
+    translator = 'Messenger.py'
     echo = 'echo.py'
     common = 'Common.py'
     runbat = 'run.bat'
     runsh = 'run.sh'
+    source = 'source.txt'
 
     copyfile(run)
     copyfile(setup)
     copyfile(translator)
     copyfile(echo)
     copyfile(common)
+    copyfile(source)
     copyfile(runbat, '../bin/')
     copyfile(runsh, '../bin/')
     if not os.path.exists('../bin/interpreter/tinylisp'):
