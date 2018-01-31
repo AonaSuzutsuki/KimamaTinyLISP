@@ -6,17 +6,7 @@
 """
 
 
-def car(list):
-    if isinstance(list, str):
-        return list
-    return list[0]
-
-
-def cdr(list):
-    return list[1:]
-
-
-class ListParser():
+class ListParser:
     """
         Parse TinyLIST from yacc tree.
     """
@@ -24,72 +14,126 @@ class ListParser():
     def __init__(self):
         return
 
-    def parse(self, text):
-        pList = []
+    @staticmethod
+    def parse(text):
+        """
+            Do parse yacc tree.
+            :param text:
+            :return:
+        """
+        p_list = []
         tokens = ListParser._preparse(text)
 
-        while len(tokens) > 0:
+        while tokens:
             token = ListParser._convert_list(tokens)
-            pList.append(ListParser._parse(token, []))
-        return pList
+            p_list.append(ListParser._parse(token, []))
+        return p_list
 
     @staticmethod
-    def _parse(aList, rList):
-        for elem in aList:
+    def car(a_list):
+        """
+            Get a car element from list.
+            :param a_list:
+            :return:
+        """
+        if isinstance(a_list, str):
+            return a_list
+        return a_list[0]
+
+    @staticmethod
+    def cdr(a_list):
+        """
+            Get a cdr elements from list.
+            :param a_list:
+            :return:
+        """
+        return a_list[1:]
+
+    @staticmethod
+    def _parse(a_list, ret_list):
+        car = ListParser.car
+        cdr = ListParser.cdr
+        for elem in a_list:
             if isinstance(elem, list):
-                celem = car(elem)
-                if celem == 'LIST':  # ネストされたリスト判定
-                    rList.append(ListParser._parse(cdr(elem), []))
-                elif celem == 'ATOM':  # アトム判定
-                    (id, val) = cdr(elem)[0]
-                    val = ListParser._resolve(id, val)
-                    rList.append(val)
+                top_elem = car(elem)
+                if top_elem == 'LIST':  # ネストされたリスト判定
+                    ret_list.append(ListParser._parse(cdr(elem), []))
+                elif top_elem == 'EMPTY':
+                    return []
+                elif top_elem == 'ATOM':  # アトム判定
+                    (nid, val) = cdr(elem)[0]
+                    val = ListParser._resolve_atom(nid, val)
+                    ret_list.append(val)
                 else:
-                    ListParser._parse(elem, rList)
+                    ListParser._parse(elem, ret_list)
             elif elem == 'LIST':  # 一番初めのリスト判定
-                ListParser._parse(elem, rList)
+                ListParser._parse(elem, ret_list)
             elif elem == 'ATOM':
-                (id, val) = cdr(aList)[0]
-                val = ListParser._resolve(id, val)
+                (nid, val) = cdr(a_list)[0]
+                val = ListParser._resolve_atom(nid, val)
                 return val
-        return rList
+        return ret_list
 
     @staticmethod
-    def _resolve(id, val):
-        if id == 'IDENTIFIER':
+    def _resolve_atom(nid, val):
+        """
+            Convert yacc tree atom to python value.
+            :param nid:
+            :param val:
+            :return:
+        """
+        if nid == 'IDENTIFIER':
             text = str(val)
             if text == 'nil':
                 return None
             return text
-        elif id == 'WQUOTED':
+        elif nid == 'WQUOTED':
             text = str(val)
-            return text
-        elif id == 'INTEGER':
+            return '"' + text + '"'
+        elif nid == 'INTEGER':
             return int(val)
-        elif id == 'FLOAT':
+        elif nid == 'FLOAT':
             return float(val)
 
     @staticmethod
     def _replace_newline(text):
+        """
+            Unify newline to LF.
+            :param text:
+            :return:
+        """
         text = text.replace('\r\n', '\r')
         text = text.replace('\r', '\n')
         return text
 
     @staticmethod
     def _preparse(text):
+        """
+            Prepare before analysis.
+            Make tokens.
+            :param text: yacc tree text
+            :return: token python list.
+        """
+        import shlex
         text = ListParser._replace_newline(text).replace('\n', '')
-        text = text.replace('(', ' ( ').replace(')', ' ) ').split()
-        return text
+        text = text.replace('(', ' ( ').replace(')', ' ) ')
+        a_list = shlex.split(text)
+        return a_list
 
     @staticmethod
     def _convert_list(tokens):
+        """
+            Convert tokens to yacc tree of python list.
+            :param tokens:
+            :return:
+        """
         token = tokens.pop(0)
         if token == '(':
-            list = []
+            a_list = []
             while tokens[0] != ')':
-                list.append(ListParser._convert_list(tokens))
+                a_list.append(ListParser._convert_list(tokens))
             tokens.pop(0)  # pop off ')'
-            return list
+            return a_list
         return token
 
 
@@ -136,8 +180,6 @@ def main():
                                             (IDENTIFIER b)))
                                     (ATOM
                                         (IDENTIFIER c))))))))))
-"""
-    text2 = """
 (LIST
         (
             (
@@ -155,11 +197,9 @@ def main():
                     (ATOM
                         (INTEGER 2))))))
 """
-    listParser = ListParser()
-    pList = listParser.parse(text)
-    print(pList)
-    pList = listParser.parse(text2)
-    print(pList)
+    list_parser = ListParser()
+    p_list = list_parser.parse(text)
+    print(p_list)
     return 0
 
 

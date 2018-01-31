@@ -14,7 +14,8 @@ class Error:
     def __init__(self, err_msg):
         self._err_msg = err_msg
 
-    def get_err_msg(self):
+    @property
+    def err_msg(self):
         """
             Get an error message.
             :return: Error message

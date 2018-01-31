@@ -15,7 +15,7 @@ int linecounter = 1;
 "("																			{ return(LPAREN); }
 ")"																			{ return(RPAREN); }
 
-"\""([A-Za-z0-9]|":"|"/"|"."|"-"|" "|"("|")")*"\""							{ return(WQUOTED); }
+"\""([A-Za-z0-9]|{special}|" ")*"\""										{ return(WQUOTED); }
 "@n"																		{ linecounter++; }
 "\n"																		{ linecounter++; }
 "\r\n"																		{ linecounter++; }

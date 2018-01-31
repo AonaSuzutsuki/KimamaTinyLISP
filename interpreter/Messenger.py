@@ -10,7 +10,7 @@ import os
 import Common
 
 
-class Translator:
+class Messenger:
     """
         Processing system for communicating the LISP syntax to the parser
     """
@@ -19,7 +19,7 @@ class Translator:
         self._parser = parser
         self._command = '{0} "{2}{1}echo.py" "{3}" | {2}{1}{4}'
         self._sep = os.sep
-        self._dirpath = os.path.dirname(os.path.abspath(__file__))
+        self._dir_path = os.path.dirname(os.path.abspath(__file__))
 
     def send(self, text):
         """
@@ -28,12 +28,12 @@ class Translator:
             :return: Tiny LIST
         """
         text = Common.replace_newline(text).replace('\n', '@n').replace('"', '\\"')
-        command = self._command.format(self._python, self._sep, self._dirpath, text, self._parser)
+        command = self._command.format(self._python, self._sep, self._dir_path, text, self._parser)
 
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        rtext = self.read(proc.stdout.readline)
-        errtext = self.read(proc.stderr.readline)
+        rtext = self.read(iter(proc.stdout.readline, b''))
+        errtext = self.read(iter(proc.stderr.readline, b''))
         proc.stdout.close()
         proc.stderr.close()
 
@@ -53,6 +53,6 @@ class Translator:
             :return: read to end text
         """
         text = b''
-        for line in iter(itr, b''):
+        for line in itr:
             text += line
         return text
