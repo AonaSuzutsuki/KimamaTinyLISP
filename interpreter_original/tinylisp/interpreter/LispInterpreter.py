@@ -6,7 +6,8 @@
 """
 
 from tinylisp.interpreter import Procedure, Enviroment, Error
-from tinylisp.parser import ListParser
+from tinylisp.parser import TreeListParser, ListParser
+from tinylisp.parser.ListParser import Node
 
 
 class LispInterpreter:
@@ -83,8 +84,11 @@ class LispInterpreter:
             env = self.global_env
 
         while True:
-            if x is None or (isinstance(x, list) and len(x) <= 0):
+            if x is None or (isinstance(x, Node) and len(x) <= 0):
                 return None
+
+            if isinstance(x, Node):
+                x_car = x.car
             if isinstance(x, str) and x[0] == '"':  # Wquote
                 return x[1:-1]
             elif isinstance(x, str):  # 変数参照
@@ -92,50 +96,58 @@ class LispInterpreter:
                 if not isinstance(val, Error.Error):
                     val = val[x]
                 return val
-            elif not isinstance(x, list):  # 定数リテラル
+            elif self._is_atom(x):  # 定数リテラル
                 return x
-            elif x[0] == 'quote':  # (quote exp)
+            elif x_car == 'quote':  # (quote exp)
                 (_, exp) = x
                 return exp
-            elif x[0] == 'if':  # (if test conseq alt)
+            elif x_car == 'if':  # (if test conseq alt)
                 (_, test, conseq, alt) = x
                 return self.eval((conseq if self.eval(test, env) else alt), env)
-            elif x[0] == 'cond':
+            elif x_car == 'cond':
                 exps = x[1:]
                 for exp in exps:
                     if exp[0] == 't':
                         return self.eval(exp[1], env)
                     elif self.eval(exp[0], env):
                         return self.eval(exp[1], env)
-            elif x[0] == 'progn':
+            elif x_car == 'progn':
                 exps = x[1:]
                 for exp in exps:
                     self.eval(exp, env)
                 return None
-            elif x[0] == 'set!':  # (set! var exp)
+            elif x_car == 'set!':  # (set! var exp)
                 (_, var, exp) = x
                 env.find(var)[var] = self.eval(exp, env)
                 return None
-            elif x[0] == 'defun':  # (define var exp)
+            elif x_car == 'defun':  # (define var exp)
                 (_, var, exp) = x
                 env[var] = self.eval(exp, env)
                 return None
-            elif x[0] == 'lambda':  # (lambda (var*) exp)
+            elif x_car == 'lambda':  # (lambda (var*) exp)
                 (_, vars, exp) = x
                 return Procedure.Procedure(vars, exp, env)
                 # lambda *args: self.eval(exp, Env(vars, args, env))
-            elif x[0] == 'begin':  # (begin exp*)
+            elif x_car == 'begin':  # (begin exp*)
                 for exp in x[1:]:
                     val = self.eval(exp, env)
                     return val
-            elif x[0] == 'trace':
+            elif x_car == 'trace':
                 for key, value in env.items():
                     print('{0} : {1}'.format(key, value))
                 return None
-            elif x[0] == 'exit':
+            elif x_car == 'exit':
                 return 'exit'
             else:  # (proc exp*)
-                exps = [self.eval(exp, env) for exp in x]
+                exps = []
+                exps.append(self.eval(x_car, env))
+                x_cdr = x.cdr
+                while x_cdr is not None:
+                    if isinstance(x_cdr, Node):
+                        exps.append(self.eval(x_cdr, env))
+                        x_cdr = x_cdr.cdr
+
+                #exps = [self.eval(exp, env) for exp in x]
                 proc = exps.pop(0)
                 try:
                     if isinstance(proc, Procedure.Procedure):
@@ -148,7 +160,7 @@ class LispInterpreter:
                             val = proc(*exps)
                             return val
                         else:
-                            if isinstance(x[0], str):
+                            if isinstance(x_car, str):
                                 return proc
                             return x
                 except TypeError as type_error:
@@ -197,6 +209,7 @@ def repl_with_asm(messenger, trace=False, prompt='tinylisp> '):
     #         )
     #         (test 1)
     #         """)
+    tree_list_parser = TreeListParser.TreeListParser
     list_parser = ListParser.ListParser
     interp = LispInterpreter()
     #
@@ -211,7 +224,8 @@ def repl_with_asm(messenger, trace=False, prompt='tinylisp> '):
         text = _pinput(prompt)
         suc, out = messenger.send(text)
         if suc:
-            a_list = list_parser.parse(out)
+            a_list = tree_list_parser.parse(out)
+            a_list = list_parser.parse(a_list)
             for elem in a_list:
                 if trace:
                     print('trace: ', elem)
@@ -243,7 +257,7 @@ def repl_with_list_from_file(filename, messenger, trace=False, prompt='tinylisp>
     """
     with open(filename, "rU", encoding="utf_8") as a_file:
         interp = LispInterpreter()
-        list_parser = ListParser.ListParser
+        list_parser = TreeListParser.TreeListParser
         text = ''
         for line in a_file:
             if line != '':
